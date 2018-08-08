@@ -1,0 +1,82 @@
+---
+title: "Introduction to Multiple Regression"
+author: 
+  - "James M. Murray, Ph.D."
+  - "University of Wisconsin - La Crosse"
+date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
+
+output: 
+  html_document:
+    keep_md: yes
+  pdf_document:
+    fig_width: 7
+    fig_height: 3.5
+urlcolor: blue
+---
+
+[PDF file location: http://www.murraylax.org/rtutorials/multregression_intro.pdf](http://www.murraylax.org/rtutorials/multregression_intro.pdf)
+
+[HTML file location: http://www.murraylax.org/rtutorials/multregression_intro.html](http://www.murraylax.org/rtutorials/multregression_intro.html)
+
+* * * * 
+
+**Multiple regression analysis** extends simple bivariate regression analysis with the inclusion of more than one explanatory variable.  
+
+The procedure is used to determine how one or more explanatory variables influence an outcome variable, *while holding all other explanatory variables fixed*.
+
+## 1. Example: Monthly Earnings and Years of Education ##
+
+The code below downloads a CSV file that includes data from 1980 for 935 individuals on variables including their total monthly earnings (`MonthlyEarnings`) and a number of variables that could influence income, including each person's IQ (`IQ`), a measure of knowledge of their job (`Knowledge`), years of education (`YearsEdu`), years experience (`YearsExperience`), and years at current job (`Tenure`). The data set originally comes from textbook website for Stock and Watson's *Introduction to Econometrics*.
+
+```{r}
+wages <- read.csv("http://murraylax.org/datasets/wage2.csv");
+```
+
+Suppose we wish to estimate a linear multiple regression with the above five variables as explanatory variables.  The population regression equation has the form,
+
+$$ y_i = \beta_0 + \beta_1 x_{1,i} + \beta_2 x_{2,i} + ... + \beta_k x_{k,i} + \epsilon_i, $$
+
+where $k=5$ is the number of explanatory variables.  The sample regression equation is therefore given by,
+
+$$ y_i = b_0 + b_1 x_{1,i} + b_2 x_{2,i} + ... + b_k x_{k,i} + e_i, $$
+
+We can use the `lm()` function to estimate the regression.  In the code below we call `lm()` with a single parameter that is a formula specifying how the outcome variable, `MonthlyEarnings` depends linearly on the seven explanatory variables.  The function `lm()` produces a large list of output, which we assign to an object we name `lmwages`.  We call the `summary()` function next to display the coefficient estimates to the screen.
+
+```{r}
+lmwages <- lm(MonthlyEarnings ~ IQ + Knowledge + YearsEdu + YearsExperience 
+              + Tenure, data=wages)
+summary(lmwages)
+```
+
+The results indicate the best fitting line is given by,
+
+$$ \hat{y}_i = -531.0 + 3.7 x_{IQ,i} + 8.3 x_{Knowledge,i} + 47.3 x_{Edu,i} + 11.9 x_{Exp,i} + 6.2 x_{Tenure,i}. $$
+
+## 2. Omitted Variable Bias ##
+
+A multiple regression is even useful when one is only interested in the impact of *one* of the explanatory variables.  The reason is that the regression analysis *holds constant* the effects of the other variables.
+
+Suppose, for example, that you are primarily interested in estimating the impact of education on monthly earnings.  Suppose you just estimated the following bivariate regression of education on earnings:
+
+$$ y_i = \beta_0 + \beta_1 x_{Edu,i} + \epsilon_i $$ 
+
+The following call to `lm()` and `summary()` produce the estimates for the simple, bivariate model:
+
+```{r}
+lmwages_bivariate <- lm(MonthlyEarnings ~ YearsEdu, data=wages)
+summary(lmwages_bivariate)
+```
+
+The bivariate regression predicts that each year of education is associated with an increase in monthly earnings of \$60.21, while the multiple regression above predicted that each year of education is associated with an increase in monthly earnings of only \$47.27.
+
+The bivariate regression estimate is a *biased* estimate of the degree to which education affects monthly earnings, because it suffers from **omitted variable bias**.  This is when there are possible variables that are not included in the regression which influence both the explanatory variable and the outcome variable.  When such variables are omitted from the regression, the regression is not able to hold those effects constant. The regression coefficients estimates for the variables that are included may be picking the omitted effects.
+
+One such omitted variable in the bivariate regression is cognitive ability. People with higher cognitive ability are likely to perform better in their careers and earn more income.  This is true both for people who get high levels of education and low levels of education.It happens that people with higher cognitive ability receive higher levels of education on average. When measures of cognitive ability are omitted from the regression, the regression incorrectly attributes the full amount of the higher salaries to higher levels of education, when at least part of this should be attributed to higher cognitive ability.  
+
+The multiple regression includes multiple measures of cognitive ability, including IQ and job knowledge.  When these measures of cognitive ability are held fixed, and only a marginal increase in education is considered, the estimated impact of education on monthly earnings is \$47.27.
+
+Suppose IQ were to be removed from the regression.  Call this regression a *restricted* regression, and let $b_{Edu}^r$ denote the regression coefficient from the restricted regression.  We know that the restricted regression is susceptible to omitted variable bias.  Let $b_{Edu}$ and $b_{IQ}$ denote the regression coefficients from the unrestricted multiple regression that includes IQ.  It can be shown that the estimated coefficient on the restricted regression is given by,
+
+$$ b_{Edu}^r = b_{Edu} + b_{IQ} (d_{IQ,Edu} + d_{IQ,Knowledge} + d_{IQ,YearsExp} + d_{IQ,Tenure} ) $$ 
+
+where $d_{Edu,j}$ is the regression coefficient on the $jth$ variable from a regression with the omitted variable as the outcome variable and all the remaining explanatory variables.  The first term in the above equation is the coefficient on the unrestricted regression.  All the other terms in the equation add up to the bias created by omitting the variable.  The larger are the values for $d_{Edu,j}$, the more correlated the omitted variable is to the existing explanatory variables, the larger will be the bias.  Also, the smaller is $b_{IQ}$, the less important is the omitted variable in the regression in the first place, the smaller will be the size of the bias.

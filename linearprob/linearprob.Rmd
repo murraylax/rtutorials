@@ -1,0 +1,246 @@
+---
+title: "Linear Probability Model"
+author: 
+  - "James M. Murray, Ph.D."
+  - "University of Wisconsin - La Crosse"
+date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
+
+output: 
+  html_document:
+    keep_md: yes
+  pdf_document:
+    fig_width: 7
+    fig_height: 3.5
+urlcolor: blue
+---
+
+[PDF file location: http://www.murraylax.org/rtutorials/linearprob.pdf](http://www.murraylax.org/rtutorials/linearprob.pdf)
+
+[HTML file location: http://www.murraylax.org/rtutorials/linearprob.html](http://www.murraylax.org/rtutorials/linearprob.html)
+
+* * * * 
+*Note on required packages:* The following code requires the packages `sandwich`, `lmtest` and `tidyverse`. The packages `sandwich` and `lmtest` include functions to estimate regression error variance that may change with the explanatory variables. The package `tidyverse` is a collection of packages convenient for manipulating and graphing data. If you have not already done so, download, install, and load the libraries with the following code:
+
+`install.packages("sandwich") # Only need to this once per machine`   
+
+`install.packages("lmtest") # Only need to this once per machine`   
+
+`install.packages("tidyverse") # Only need to this once per machine`     
+
+`library("sandwich") # Need to run this every time you start R`
+
+`library("lmtest") # Need to run this every time you start R`
+
+`library("tidyverse") # Need to run this every time you start R`
+
+* * * * 
+```{r,echo=FALSE, include=FALSE}
+library("sandwich")
+library("lmtest")
+library("tidyverse")
+```
+
+## 1 Introduction ##
+
+We established in a previous tutorial that binary variables can be used to estimate *proportions* or *probabilities* that an event will occur.  If a binary variable is equal to 1 for when the event occurs, and 0 otherwise, estimates for the mean can be interpreted as the probability that the event occurs.
+
+A **linear probability model (LPM)** is a regression model where the *outcome* variable is a binary variable, and one or more explanatory variables are used to predict the outcome.  Explanatory variables can themselves be binary, or be continuous.
+
+## 2 Data Set: Mortgage loan applications ##
+
+The data set, `loanapp.RData`, includes actual data from 1,777 mortgage loan applications, including whether or not a loan was approved, and a number of possible explanatory variables including demographic information of the applicants and financial variables related to the applicant's ability to pay the loan such as the applicant's income and employment information, value of the mortgaged property, and credit history.
+
+The code below loads the `R` data set, which creates a data frame called `df`, and a list of descriptions for the variables called `desc`.
+
+```{r}
+load(url("http://murraylax.org/datasets/loanapp.RData"))
+```
+
+## 3 Estimating a Linear Probability Model ##
+
+### 3.1 Model Setup ###
+Let us estimate a linear probability model with loan approval status as the outcome variable (`approve`) and the following explanatory variables:
+
+* `loanprc`:Loan amount relative to price of the property
+
+* `loaninc`: Loan amount relative to total income 
+
+* `obrat`: Value of other debt obligations relative to total income
+
+* `mortno`: Dummy variable equal to 1 if the applicant has no previous mortgage history, 0 otherwise
+
+* `unem`: Unemployment rate in the industry where the applicant is employment
+
+```{r}
+lmapp <- lm(approve ~ loanprc + loaninc + obrat + mortno + unem, data=df)
+summary(lmapp)
+```
+
+### 3.2 Visualizing the Linear Probability Model
+
+Let us visualize the actual and predicted outcomes with a plot. The code below calls the `ggplot()` function to visualize the how loan approval depends on the size of the loan as a percentage of the price of the property. 
+
+```{r}
+ggplot(data=df, mapping=aes(x=loanprc, y=approve)) + 
+  geom_point() + geom_smooth(method="lm", se=FALSE)
+```
+On the vertical axis we have the actual value of `approve` (equal to 0 or 1) or the predicted probability of a loan approval. The black points show the actual values and the blue line shows the predicted values.  
+
+The first parameter sets the data layer, pointing to the data frame, `df`. 
+
+The second parameter sets the aesthetics layer (also known as mapping layer). We call the function `aes()` to map the variable `loanprc` to the x-axis and `approve` to the y-axis. 
+
+Next we add the geometry layer with a call to geom_point(). This produces a scatter plot with points.
+
+Finally, we create the best fit linear regression line using the function `geom_smooth(method="lm", se=FALSE)`. This function creates both a geometry and a statistics layer. The function estimates the best fit simple linear regression function (using `loanprc` as the only explanatory variable) using the function `lm()`. We set `se=FALSE` because we do not wish to view the confidence bounds around the line. As we discuss below, the standard errors computed by the `lm()` function that are used to create the confidence bounds are incorrect for a linear probability model. 
+
+It is a strange looking scatter plot because all the values for approve are either at the top (=1) or at the bottom (=0).  The best fitting regression line does not visually appear to describe the behavior of the values, but it still is chosen to minimize the average squared vertical distance between all the observations and the predicted value on the line. 
+
+The strange look of the scatter plot is telling as to how well the model predicts the data. You can see that the model fails to predict very well the many number of unapproved loans (`approve`=0) with values of `loanprc` between 0 and 150. While all of these loans were not approved, the linear model predicts a probability for approval between 60\% and 100\%.
+
+The negative slope of the line is indicative that an increase in the size of the loan relative to the property price leads to a decrease in the probability that the loan is accepted. The magnitude of the slope indicates how much the approval probability decreases for each 1 percentage point increase in the size of the loan relative to the property price.
+
+## 3.3 Predicting marginal effects ##
+
+Since the average of the binary outcome variable is equal to a probability, the predicted value from the regression is a prediction for the *probability that someone is approved for a loan*.  
+
+Since the regression line is sloping downwards for `loanprc`, we see that as an applicant's laon amount relative to the property price increases, the probability that he/she is approved for a loan *decreases.*
+
+```{r, echo=FALSE, include=FALSE}
+coef <- lmapp$coefficients["loanprc"]
+coefstr <- sprintf("%.4f", coef)
+coefprcstr <- sprintf("%.2f%%", -1*coef*100)
+```
+
+The coefficient on `loanprc` is the estimated **marginal effect** of `loanprc` on the *probability* that the outcome variable is equal to 1. With a coefficient equal to `r coefstr`, our model predicts that for every 1 percentage point increase in housing expenses relative to income, the probability that the applicant is approved for a mortgage loan decreases by `r coefprcstr`.
+
+## 4 Heteroskedasticity #
+
+*All linear probability models have heteroskedasticity.*  Because all of the actual values for $y_i$ are either equal to 0 or 1, but the predicted values are probabilities anywhere between 0 and 1 (and sometimes even greater or smaller), the size of the residuals grow or shrink as the predicted values grow or shrink.  
+
+### 4.1 Visualizing Heteroskedasticity ###
+
+Let us plot the predicted values against the squared residuals to see this:
+
+```{r}
+df.lmapp.results <- data.frame(pred=lmapp$fitted.values, res2=lmapp$residuals^2)
+ggplot(data=df.lmapp.results, mapping=aes(x=pred, y=res2)) + geom_point()
+```
+
+You can see that as the predicted probability that a loan is approved (the x-axis) increases, the estimate of the variance increases for some observations and decreases for some others. 
+
+### 4.2 Correcting for Heteroskedasticity ###
+
+In order to conduct hypothesis tests and confidence intervals for the marginal effects an explanatory variable has on the outcome variable, we must first correct for heteroskedasticity.  We can use the White estimator for correcting heteroskedasticity.
+
+We compute the White heteroskedastic variance/covariance matrix for the coefficients with the call to `vcovHC` (which stands for Variance / Covariance Heteroskedastic Consistent):
+
+```{r}
+vv <- vcovHC(lmapp, type="HC1")
+```
+
+The first parameter in the call above is our original output from our call to `lm()` above, and the second parameter `type="HC1"` tells the function to use the White correction.
+
+Then we call `coeftest()` to use this estimate for the variance / covariance to properly compute our standard errors, t-statistics, and p-values for the coefficients.
+
+```{r}
+coeftest(lmapp, vcov = vv)
+```
+
+```{r, echo=FALSE, include=FALSE}
+ct<- coeftest(lmapp, vcov = vv)
+pv <-  ct["loanprc","Pr(>|t|)"]
+pvstr <- sprintf("%.3f", pv)
+pvhalfstr <- sprintf("%.3f", pv*0.5)
+```
+
+Suppose we wish to test the hypothesis that a higher loan value relative to the property price leads to a decrease in the probability that a loan application is accepted.  The null and alternative hypotheses are given by,
+
+$$ H_0: \beta_{loanprc} = 0 $$
+$$ H_0: \beta_{loanprc} < 0 $$
+
+The coefficient is negative (`r coefstr`) and the p-value in the output is equal to `r pvstr`. This is the p-value for a two-tailed test. The p-value for a one-tailed test is half that amount, or `r pvhalfstr`. Since `r pvhalfstr` < 0.05, we reject the null hypothesis and conclude that we have statistical evidence that, given the estimated effects of all the other explanatory variables in the model, an increase in the value of the loan relative to the property price leads to a decrease in the probability a loan is approved. 
+
+## 5. Problems using the Linear Probability Model ##
+
+There are some problems using a binary dependent variable in a regression.  
+
+1.  There is heteroskedasticity.  But that's ok, we know how to correct for it.
+
+2.  A *linear* model for a *probability* will eventually be wrong for *probabilities* which are by definition bounded between 0 and 1.  Linear equations (i.e. straight lines) have no bounds.  They continue eventually upward to positive infinity in one direction, and negative infinity in the other direction.  *It is possible* for the linear probability model to predict probabilities greater than 1 and less than 0.
+\newline
+\newline
+Use caution when the predicted values are near 0 and 1.  It is useful to examine the predicted values from your regression to see if any are near these boundaries.  In the example above, all the predicted values are between 0.7 and 0.95, so fortunately our regression equation is not making any mathematically impossible predictions.
+\newline
+\newline
+Also, be cautious when using the regression equation to make predictions outside of the sample.  The predicted values in your regression may have all fallen between 0 and 1, but maybe a predicted value will move outside the range.
+
+3. The error term is not normal.  When it is, then with small or large sample sizes, the sampling distribution of your coefficient estimates and predicted values are also normal.
+\newline
+\newline
+While the residuals and the error term are never normal, *with a large enough sample size*, the central limit theorem does deliver normal distributions for the coefficient estimates and the predicted values.  This problem that the error term is not normal, is really only a problem with small samples.
+
+
+<!--
+
+
+# 3. Problems using the Linear Probability Model #
+
+There are some problems using a binary dependent variable in a regression.  
+
+1.  There is heteroskedasticity.  But that's ok, we know how to correct for it.
+
+2.  A *linear* model for a *probability* will eventually be wrong for *probabilities* which are by definition bounded between 0 and 1.  Linear equations (i.e. straight lines) have no bounds.  They continue eventually upward to positive infinity in one direction, and negative infinity in the other direction.  *It is possible* for the linear probability model to predict probabilities greater than 1 and less than 0.
+\newline
+\newline
+Use caution when the predicted values are near 0 and 1.  It is useful to examine the predicted values from your regression to see if any are near these boundaries.  In the example above, all the predicted values are between 0.7 and 0.95, so fortunately our regression equation is not making any mathematically impossible predictions.
+\newline
+\newline
+Also, be cautious when using the regression equation to make predictions outside of the sample.  The predicted values in your regression may have all fallen between 0 and 1, but maybe a predicted value will move outside the range.
+
+3. The error term is not normal.  When it is, then with small or large sample sizes, the sampling distribution of your coefficient estimates and predicted values are also normal.
+\newline
+\newline
+While the residuals and the error term are never normal, *with a large enough sample size*, the central limit theorem does deliver normal distributions for the coefficient estimates and the predicted values.  This problem that the error term is not normal, is really only a problem with small samples.
+
+## 3.1. Alternatives to the linear probability model ##
+
+There are fancier methods out there for estimating binary dependent regression models that force the predicted values between 0 and 1, imposing some curvature on the regression model instead of a straight line.  
+
+One such model, called the *logistic regression model* imposes the logistic function.  A logistic function has the form:
+
+$$ f(x) = \frac{e^x}{1+e^x} $$
+
+We can plot this function with the following call to `curve()`:
+
+``{r}
+curve((exp(x) / (1 + exp(x))), 
+      from=-5, to=5, 
+      ylab="f(x)", main="Logistic Function")
+``
+
+To get an idea for how well a straight line can approximate the logistic function, we add to the plot an equation for a straight line with slope equal to 0.2 and vertical intercept equal to 0.5:
+
+``{r}
+curve((exp(x) / (1 + exp(x))), 
+      from=-5, to=5, 
+      ylab="f(x)", main="Logistic vs Linear Function")
+abline(a=0.5,b=0.2)
+``
+
+Over a large range of values for $x$, including the values that are likely near the mean and median, the slope and predicted values of the linear equation approximate well the more complicated logistic function.
+
+## 3.2. Which model should you use?  Logistic regression or linear probability model? ##
+
+1.  Logistic function is mathematically correct.  The linear probability model is only an approximation of the truth.
+
+2.  I'm not going to teach you the logistic regression model :)
+
+3.  Estimate both, compare your predictions.  Often enough they are very similar.
+
+4.  There is a lot more you can do with the linear probability model.
+
+5.  A lot of things, like *marginal effects*, are much easier with the linear probability model.
+
+
+-->

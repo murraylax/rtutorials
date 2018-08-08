@@ -1,0 +1,94 @@
+---
+title: "One-Way ANOVA for Differences in Means"
+output:
+  html_document:
+    highlight: haddock
+    theme: readable
+---
+
+* * *
+*Note on required packages:*  The following code requires the package `gdata`.  If you have not already done so, download, install, and load the library with the following code:
+
+`install.packages("gdata")` 
+
+`library("gdata")`
+
+* * *
+
+Here we investigate estimating the difference in the means between *two or more* independent samples. 
+
+With **independent samples**, we have two or more groups of observations, distinguishable by some measured characteristic to divide into these groups, and no member of one group is any other other group.  The outcome of the observations in one group must be *independent* of the outcome of the observations in any other group.  
+
+Testing differences in *means* among independent samples is appropriate when a variable measured from independent samples are in the same units and at the interval or ratio scale.
+
+## I'M RIGHT HERE - I NEED A DIFFERENT EXAMPLE 
+
+**Example:** Current Population Survey from 2004 that includes data on average hourly earnings, marital status, gender, and age for thousands of people.  A part of it is available for download from textbook website for Stock and Watson's *Introduction to Econometrics*.
+
+Our goal with this example is to estimate the difference in average hourly earnings between men and women.  The gender variable is our measured characteristic that will divide our sample into two independent samples.
+
+###1. Download the dataset.
+The code below downloads the Excel file from the textbook's website and assigns the dataset to a variable we create and call `cps04`.
+
+```{r, echo=FALSE, include=FALSE}
+library("gdata");
+```
+```{r}
+cps04 <- read.xls("http://wps.aw.com/wps/media/objects/3254/3332253/datasets2e/datasets/CPS04.xls");
+```
+
+The dataset `cps04` includes a variable called `ahe`, which stands for average hourly earnings, and a variable `female` which is equal to 1 if the observation is for a female and equal to 0 if for a male.
+
+###2. Calculate Means 
+The function `t.test` computes a number of statistics and statistical tests for a difference between two means, including sample estimates for each mean, a confidence interval, and a hypothesis test.  In the code below, we call the  function and assign all the resulting output to a new variable we call `ahestats`.
+```{r}
+ahestats <- t.test(ahe ~ female, data=cps04, conf.level=0.95)
+```
+The first parameter, `ahe ~ female`, is a formula that says we are interested in the outcome variable `ahe` and how it is different for different values for `female`.  The second parameter, `data=cps04`, tells the function in what dataset the variables `ahe` and `female` can be found.  The last parameter `conf.level=0.95` will generate output that will be useful later for computing a 95% confidence interval. 
+
+The output of `t.test` that we assigned to variable `ahestats` is a list which includes an item called `estimate`.  The `estimate` item includes the mean of each of the groups defined by `female`.  Report this item with the following code:
+```{r}
+ahestats$estimate
+```
+
+We can see from above that men in our sample have average hourly earning equal to $17.77 and women have average hourly earnings equal to $15.36.
+
+###3. Calculate a 95% Confidence Interval  
+The confidence interval is a range of values for difference between the population means for our two independent groups, based on our estimates of the sample means and an estimate for the margin of error due to random sampling.  
+
+The output to the call to `t.test` above also included a confidence interval, in an item called `conf.int`.  Let's call this item to report our confidence interval:
+```{r}
+ahestats$conf.int
+```
+The confidence interval for the difference between average hourly earnings between men and women is between $2.04 and $2.79.  We can say with 95% confidence that this interval estimate includes the true difference in population means.
+
+###4. Two-Tailed Independent Samples T-Test 
+An **independent samples t-test** lets us determine whether there is evidence that the mean of the first group is different than the mean of the second group in the population.  The typical two-tailed test considers the following null and alternative hypotheses:
+
+**Null hypothesis: $\mu_0-\mu_1=0$   
+Alternative hypothesis: $\mu_0-\mu_1\neq 0$**
+
+Notice that the alternative hypothesis includes a $\neq$ sign which implies that this is a two-tailed test.  We are not explicitly testing which group has a larger average hourly earnings.  We are only testing whether the population means are different from one another.  
+
+The output to the call to `t.test` above also included an independent samples t-test.  If we call our return value, summary information from the test is output to the screen.
+```{r}
+ahestats
+```
+
+We can see from above that the p-value is 2.2e-16 which is much smaller than a significance level of 5%.  We can say confidently that there is statistical evidence that the average hourly earnings is different for men and women.
+
+###5. One-Tailed Independent Samples T-Test 
+Suppose a politician claims that men earn on average more than $2.00 per hour more than women.  The null and alternative hypotheses for testing this claim are given by the following:
+
+**Null hypothesis: $\mu_0 - \mu_1 = 2.00$   
+Alternative hypothesis: $\mu_0 - \mu_1 > 2.00$**
+
+In the hypotheses above, $\mu_0$ denotes the mean hourly earnings for men (female=0), and $\mu_1$ denotes the mean hourly earnings for women (female=1).  The alternative hypothesis has a *greater-than* symbol, because the claim we are testing suggested that men on average make more than $2.00 per hour than women, when we subtract group 1 (women) from group 0 (men), the result should be *greater than* 2.00.  This is therefore a one-tailed test.
+
+The code that we ran above did conduct a hypothesis test, but we need to call the function again to give it the specifics that we want a one-tailed test and that we have a value of $2.00 in the hypotheses.  The relevant call to `t.test` is given by,
+
+```{r}
+t.test(ahe ~ female, data=cps04, alternative="greater", mu=2.00)
+```
+
+The p-value is 0.015, which is less than 0.05, so we can say at the 5% significance level, we found sufficient statistical evidence that on average men earn more than $2.00 per hour more than women.

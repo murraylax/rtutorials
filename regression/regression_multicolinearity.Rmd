@@ -1,0 +1,101 @@
+---
+title: "Multicolinearity"
+output: pdf_document
+---
+* * * *
+
+## 1. Example: Monthly Earnings and Years of Education ##
+
+In this tutorial, we will focus on an example that explores the relationship between total monthly earnings (`MonthlyEarnings`) and a number of factors that may influence monthly earnings including including each person's IQ (`IQ`), a measure of knowledge of their job (`Knowledge`), years of education (`YearsEdu`), years experience (`YearsExperience`), years at current job (`Tenure`), mother's education (`MomEdu`), and father's education (`DadEdu`).
+
+The code below downloads a CSV file that includes data on the above variables from 1980 for 935 individuals, and assigns it to a dataframe that we name `wages`.
+
+```{r}
+wages <- read.csv("http://murraylax.org/datasets/wage2.csv");
+```
+
+ We will estimate the following multiple regression equation using the above five explanatory variables:
+
+$$ y_i = b_0 + b_1 x_{1,i} + b_2 x_{2,i} + ... + b_k x_{k,i} + e_i, $$
+
+where $y_i$ denotes the *income* of individual $i$, each $x_{j,i}$ denotes the value of explanatory variable $j$ for individual $i$, and $k=7$ is the number of explanatory variables. 
+
+We can use the `lm()` function to estimate the regression as shown in the R code below.  We follow this with a call the `summary()` function to display the multiple regression results to the screen.
+
+```{r}
+lmwages <- lm(MonthlyEarnings ~ IQ + Knowledge + YearsEdu + YearsExperience + 
+                Tenure + as.numeric(MomEdu) + as.numeric(DadEdu), data=wages)
+summary(lmwages)
+```
+
+The `as.numeric()` calls around mothers' education and fathers' education were necessary as R would otherwise interpret these variables as categorical variables because of how the data was coded.
+
+You can see in the output that we fail to find evidence (at the 5\% level) that mothers' or fathers' education influence monthly earnings.
+
+## 2. Multicolinearity ##
+
+**Multicolinearity** is the condition when two or more explanatory variables are highly correlated.  When this happens, all correlated variables move with each other and it can be difficult to determine which of the variables are influencing the outcome.  
+
+Example, suppose $x_1$ and $x_2$ are highly positively correlated, and at least one of these variables causes $y$ to increase.  When $x_1$ moves up, so does $x_2$.  We also see that $y$ increases.  Which $x$ variable influenced $y$?  Did they both influence $y$, was it just one and not the other?
+
+When multicolinearity is most problematic, the standard errors on the coefficients for both $x_1$ and $x_2$ will both be large, because you failed to find statistical evidence for *which particular x is influencing y*.  As a result, you would *fail to find statistical evidence* that either variable in isolation affects $y$.
+
+Look at the regression results above.  The hypothesis test on the coefficients for mothers' education and fathers' education are statistically insignificant.  For each variable in isolation, we fail to find statistical evidence that the variable influences monthly earnings.
+
+Are mothers' and fathers' education levels correlated?  Let's see:
+```{r}
+cor.test(as.numeric(wages$MomEdu),  as.numeric(wages$DadEdu))
+```
+
+The variables are positively correlated.  The sample Pearson correlation coefficient is equal to 0.26, and the p-value on the hypothesis test that the population correlation is equal to zero is $8.82 x 10^{-16}$.  We have strong statistical evidence that mothers' and fathers' education levels are positively correlated.
+
+Could this be causing a multicolinearity problem.  Let us exclude fathers' education levels, and re-run the regression with only mother's education.
+
+```{r}
+lmwages <- lm(MonthlyEarnings ~ IQ + Knowledge + YearsEdu + YearsExperience + 
+                Tenure + as.numeric(MomEdu), data=wages)
+summary(lmwages)
+```
+
+Now we find statistical evidence at the 5\% level that mother's education does influence monthly earnings, after taking into account the other explanatory variables, but not accounting for father's education.
+
+In this case we see that the coefficient on Mother's education is negative, meaning on average and after accounting for the other explanatory variables, higher levels of education of one's mother leads to lower monthly earnings.  
+
+## 3. Joint F-test for Subsets of Explanatory Variables ##
+
+A joint F-test for regression fit can test the hypothesis that the population coefficients on *all* the explanatory variables are equal to zero.  That is,
+
+$$ H_0: \beta_1 = \beta_2 = ... = \beta_7 = 0 $$
+$$ H_A: \mbox{At least one } \beta_j \neq 0 $$
+
+The result of this test for the full model including both mothers' and fathers' education is given in the first R output reported in this tutorial (pages 1-2).  The F-statistic is equal to 31.47, the p-value is $2.2 x 10^{-16}$, and we find strong statistical evidence that at least one variable on the right-hand side of the regression equation helps explain monthly earnings.
+
+Related to this, we want to now test whether a subset of explanatory variables are all equal to zero.  In particular, mothers' and fathers' education levels.  In the model that included both of these variables, when looking at each coefficient in isolation, we failed to find statistical evidence that they influence monthly earnings.  Let us now test the hypothesis:
+
+$$ H_0: \beta_{MomEdu} = \beta_{DadEdu} = 0 $$
+$$ H_A: \mbox{Either } \beta_{MomEdu} \neq 0 \mbox{ or } \beta_{DadEdu} \neq 0 $$
+
+To test this we can run two regressions: *a restricted regression* that *excludes* both mothers' and fathers' education (i.e. the coefficients are *restricted* to equal zero), and *an unrestricted regression* that *includes* both mothers' and fathers' education (i.e. that coefficients are not restricted in any way).
+
+First let us compute the restricted regression:
+```{r}
+lmwages_r <- lm(MonthlyEarnings ~ IQ + Knowledge + YearsEdu + YearsExperience +  Tenure, data=wages)
+```
+
+Next the unrestricted regression:
+```{r}
+lmwages_u <- lm(MonthlyEarnings ~ IQ + Knowledge + YearsEdu + YearsExperience + 
+                Tenure + as.numeric(MomEdu) + as.numeric(DadEdu), data=wages)
+```
+
+A call to `anova()` will compare the residual sum of squares from each the restricted and unrestricted, and test the above hypotheses:
+```{r}
+anova(lmwages_r, lmwages_u)
+```
+
+We see here that the residual sum of squares (`RSS` in the output above) is higher for `Model 1` which is the restricted regression.  With fewer explanatory variables, the unexplained variability is larger.  The drop in residual or unexplained sum of squares from adding both mothers' and fathers' education is equal to `600,291`.
+
+The p-value = `0.1055`, so at the 10\% level, we fail to find statistical evidence when jointly considering both mothers' and fathers' education that either of them influence monthly earnings.
+
+
+

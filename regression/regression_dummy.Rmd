@@ -1,0 +1,138 @@
+---
+title: "Dummy Variables in Regression"
+author: 
+  - "James M. Murray, Ph.D."
+  - "University of Wisconsin - La Crosse"
+date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
+
+output: 
+  html_document:
+    keep_md: yes
+  pdf_document:
+    fig_width: 7
+    fig_height: 3.5
+urlcolor: blue
+---
+
+[PDF file location: http://www.murraylax.org/rtutorials/regression_dummy.pdf](http://www.murraylax.org/rtutorials/regression_dummy.pdf)
+
+[HTML file location: http://www.murraylax.org/rtutorials/regression_dummy.html](http://www.murraylax.org/rtutorials/regression_dummy.html)
+
+* * * * 
+
+A **dummy variable** or **binary variable** is a variable that takes on a value of 0 or 1 as an indicator that the observation has some kind of characteristic.  Common examples:
+
+* Sex (female): FEMALE=1 if individual in the observation is female, equal to 0 otherwise
+* Race (White): WHITE=1 if individual in the observation is white/Caucasian, equal to 0 otherwise
+* Urban vs Rural: URBAN=1 if individual in the observation lives in an urban area, equal to 0 otherwise
+* College graduate: COLGRAD=1 if individual in the observation has a four-year college degree, equal to 0 otherwise
+
+It is common to use dummy variables as explanatory variables in regression models, if binary categorical variables are likely to influence the outcome variable.
+
+## 1. Example: Factors Affecting Monthly Earnings  ##
+
+Let us examine a data set that explores the relationship between total monthly earnings (`MonthlyEarnings`) and a number of variables on an interval scale (i.e. numeric quantities) that may influence monthly earnings including including each person's IQ (`IQ`), a measure of knowledge of their job (`Knowledge`), years of education (`YearsEdu`), and years experience (`YearsExperience`), years at current job (`Tenure`).
+
+The data set also includes dummy variables that may explain monthly earnings, including whether or not the person is black / African American (`Black`), whether or not the person lives in a Southern U.S. state (`South`), and whether or not the person lives in an urban area (`Urban`).
+
+The code below downloads a CSV file that includes data on the above variables from 1980 for 935 individuals and assigns it to a data frame that we name `wages`.  
+
+```{r}
+wages <- read.csv("http://murraylax.org/datasets/wage2.csv");
+```
+
+The following call to `lm()` estimates a multiple regression predicting monthly earnings based on the eight explanatory variables given above, which includes three dummy variables.  The next call to `summary()` displays some summary statistics for the estimated regression.
+
+```{r}
+lmwages <- lm(MonthlyEarnings 
+              ~ IQ + Knowledge + YearsEdu + YearsExperience + Tenure
+              + Black + South + Urban,
+              data = wages)
+summary(lmwages)
+```
+
+The p-values in the right-most column reveal that all of the coefficients are statistically significantly different from zero at the 5\% significance level.  We have statistical evidence that all of these variables influence monthly earnings.
+
+The coefficient on `Black` is equal to -110.67.  This means that even after accounting for the effects of all the other explanatory variables in the model (includes educational attainment, experience, location, knowledge, and IQ), black / African American people earn on average \$110.67 less per month than non-black people.
+
+The coefficient on `South` is -50.82.  Accounting for the impact of all the variables in the model, people that live in Southern United States earn on average \$50.82 less per month than others.
+
+The coefficient on `Urban` is 155.43.  Accounting for the impact of all the variables in the model, people that live in urban areas earn \$155.43 more per month, which probably reflects a higher cost of living.
+
+We can compute confidence intervals for these effects with the following call to `confint()`
+```{r}
+confint(lmwages, parm=c("Black", "South", "Urban"), level = 0.95)
+```
+
+## 2. Dummy Interactions with Numeric Explanatory Variables ##
+
+We found that black people have lower monthly earnings on average than non-black people.  In our regression equation, this implies that the *intercept* is lower for black people than non-black people.  We can also test whether a dummy variable affects the *slope* multiplying other variables.
+
+For example, are there differences in the returns to education for black versus non-black people?  To answer this, we include an *interaction effect* between `Black` and `YearsEdu`:
+
+```{r}
+lmwages <- lm(MonthlyEarnings
+              ~ IQ + Knowledge + YearsEdu + YearsExperience + Tenure
+              + Black + South + Urban + Black*YearsEdu,
+              data = wages)
+summary(lmwages)
+```
+
+We see here that when accounting for an interaction effect between race and education, the coefficient on the `Black` dummy variable becomes insignificant, but the coefficient on the interaction term is negative and significant at the 10\% level.  The coefficient on the interaction term equal to -35.03 means the slope on education is 35.03 less when $Black=1$.
+
+The coefficient on the interaction term is interpreted as the *additional* marginal effect of the numeric variable for the group associated with the dummy variable equal to 1.  For this example:
+
+* The marginal effect on monthly earnings for non-black people for an additional year of education is equal to \$50.07 (i.e. when $Black=0$).
+
+* The marginal effect on monthly earnings for black people for an additional year of education is equal to \$50.07 - \$35.03 = \$15.02 (i.e. when $Black=1$).
+
+* Said another way, the marginal effect on monthly earnings for an additional year of education is \$35.03 less for black people than non-black people.
+
+## 3. Interacting Dummy Variables with Each Other ##
+
+Let us interact two of the dummy variables to understand this interpretation and motivation.  In the call to `lm()` below, we use our baseline model and interact `South` and `Urban`:
+
+```{r}
+lmwages <- lm(MonthlyEarnings
+              ~ IQ + Knowledge + YearsEdu + YearsExperience + Tenure
+              + Black + South + Urban + South*Urban,
+              data = wages)
+summary(lmwages)
+```
+
+To interpret the meaning of the coefficient on `South`, `Urban`, and `South*Urban`, we will ignore (hold constant) all the terms in the regression equation that do not include one of these variables.
+
+### 3.1 Difference between Urban and Rural Workers in the North/East/West ###
+
+Workers in the North / East / and West U.S. have $South=0$.  Here $South=0$, $(South~x~Urban)=0$, so neither the coefficient on the interaction nor the coefficient on `South` come into play. 
+
+The coefficient for $b_{Urban}$ implies that *in the Non-Southern U.S.*, urban workers earn on average \$200.19 more in monthly earnings than rural workers.
+
+### 3.2 Difference between Urban and Rural Workers in the South ###
+
+When focusing on workers in the South, $South=1$ and the interaction term comes into play.
+
+- Impact for urban workers in the south = $b_{South}(1) + b_{Urban}(1) + b_{Urban*South}(1)$
+- Impact for rural workers in the south = $b_{South}(1) + b_{Urban}(0) + b_{Urban*South}(0)$
+- Difference = $b_{Urban} + b_{Urban*South} = 200.19 - 116.35 =$ \$83.84 
+
+*In the Southern U.S. states*, urban workers on average earn \$83.84 more in monthly earnings than rural workers.
+
+### 3.3 Difference between Southern and North/East/West Monthly Earnings for *Urban* Workers ###
+
+- Impact for Southern urban workers = $b_{South}(1) + b_{Urban}(1) + b_{Urban*South}(1)$
+- Impact for Non-Southern urban workers = $b_{South}(0) + b_{Urban}(1) + b_{Urban*South}(0)$
+- Difference = $b_{South} + b_{Urban*South} = 30.36 - 116.35 =$ -\$85.99
+
+*For urban workers*,  workers in the South earn \$85.99 less in monthly earnings than workers outside the South.
+
+### 3.4 Difference between Southern and North/East/West Monthly Earnings for *Rural* Workers ###
+
+Rural workers have $Urban=0$ and so the interaction term $Urban~x~South=0$, so we can ignore both of those coefficients.  The coefficient for $b_{South}$ implies that Southern rural workers earn on average \$30.36$ *more* per month than Non-Southern rural workers.
+
+### 4 Three-Way Interactions and Higher! ###
+
+What?!  Things aren't complicated enough for you?!  Do at your own peril!  
+
+I have seen people include higher order interaction effects like `South * Urban * Black * YearsEdu` in their regressions.  It has never been obvious to me that they understood what their results meant.
+

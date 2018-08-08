@@ -1,0 +1,147 @@
+---
+title: "Anscombe's Quartet"
+author: 
+  - "James M. Murray, Ph.D."
+  - "University of Wisconsin - La Crosse"
+date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
+
+output: 
+  html_document:
+    keep_md: yes
+  pdf_document:
+    fig_width: 4
+    fig_height: 3.5
+urlcolor: blue
+---
+
+[PDF file location: http://www.murraylax.org/rtutorials/anscombe.pdf](http://www.murraylax.org/rtutorials/anscombe.pdf)
+
+[HTML file location: http://www.murraylax.org/rtutorials/anscombe.html](http://www.murraylax.org/rtutorials/anscombe.html)
+
+* * * * 
+*Note on required packages:*  The following code requires the packages in the `tidyverse` to create plots.If you have not already done so, download, install, and load the libraries with the following code:
+
+`install.packages("tidyverse") # This only needs to be executed once for your machine`  
+
+`library("tidyverse") # This needs to be executed every time you load R`
+
+* * * * 
+```{r,echo=FALSE, include=FALSE}
+library("tidyverse")
+```
+
+## 1. Introduction ##
+
+The purpose of a scatter plot is to visually communicate the relationship between numerical (interval or ratio scale) variables. While a correlation coefficient is a statistic that can be used to describe the strength of a linear relationship, a visual can better better describe the nature of relationship and the behavior of the underlying variables.
+
+Anscombe's quartet is a classic example of the drawback to just reporting correlation. Frank Anscombe illustrated in his 1973 *American Statistician* paper (https://www.jstor.org/stable/2682899) how a set of four different pairs of variables can deliver the same correlation coefficient, while the relationships between each pair are completely different.
+
+Anscombe's example data is available in base R. You can view the data quite simply by typing Anscombe's name.
+```{r}
+anscombe
+```
+
+## 2. Correlations ##
+
+Let us save the $x$ values in one data frame and the $y$ variables in another data frame, then compute the correlation.
+```{r}
+x <- anscombe[,1:4]
+y <- anscombe[,5:8]
+cor(x,y)
+```
+The code above pulls out the columns 1 through 4 (and all the rows) and assigned them to `x`, and columns 5 through 8 and assigns them to `y`. Then the call to `cor()` computes the correlation between each x and each y.
+
+Anscombe asks us to focus on the diagonal elements, i.e. the pairs $(x_1, y_1)$, $(x_2, y_2)$, $(x_3, y_3)$, $(x_3, y_3)$. Let us pull out just the diagonal.
+```{r}
+diag( cor(x,y) )
+```
+
+
+All the correlations are approximately equal to 0.816, but we will see below that the four relationships are very different.  
+
+## 3. Scatter Plots and Estimated Linear Relationships ##
+
+The code below creates a scatter plots for each pair of variables and shows the "best-fit" straight line to explain the relationship. You should see two things: (1) the relationships are very different, and (2) the "best-fit" straight lines are all the same.
+
+### 3.1. Pair 1 ###
+
+```{r}
+ggplot(data=anscombe, mapping=aes(x=x1, y=y1)) + 
+  geom_point() + 
+  labs(title="Pair 1") + 
+  stat_smooth(method="lm", se=FALSE)
+```
+
+These two variables seem to be well represented by a straight line.  We see some points above and some points below, and the spacing of the points from the line does not seem to change as we move along the line.
+
+### 3.2. Pair 2 ###
+
+```{r}
+ggplot(data=anscombe, mapping=aes(x=x2, y=y2)) + 
+  geom_point() + 
+  labs(title="Pair 2") + 
+  stat_smooth(method="lm", se=FALSE)
+```
+
+Clearly a curve would better illustrate this relationship.
+
+### 3.3. Pair 3 ###
+
+```{r}
+ggplot(data=anscombe, mapping=aes(x=x3, y=y3)) + 
+  geom_point() + 
+  labs(title="Pair 3") + 
+  stat_smooth(method="lm", se=FALSE)
+```
+
+A different straight line would represent this relationship better, if not for a single outlier.
+
+### 3.4. Pair 4 ###
+
+```{r}
+ggplot(data=anscombe, mapping=aes(x=x4, y=y4)) + 
+  geom_point() + 
+  labs(title="Pair 4") + 
+  stat_smooth(method="lm", se=FALSE)
+```
+
+All the values for $x$ except one are equal to the same value, not at all dependent on $y$. One value of $x$ is different. This one outlier delivers a positive correlation coefficient and a very deceiving "best fit" line.
+
+## 4. LOESS Regression Curves ##
+
+In the graphs below, we look instead at a LOESS regression curve that best describes the data. LOESS uses nearby points to estimate the shape of the curve so that the curve changes shape as the relationship between $x$ and $y$ change. Visualizing a LOESS curve is useful to determine whether or not simple correlations or linear regressions are desirable ways of modeling your data.  The procedure may also point you in an alternative way of modeling the data or alternative explanations for the relationships between variables.
+
+We exclude the Anscombe's fourth pair, as in this case there is no relationship between the two variables, nor is there even enough variation in $x$ to even estimate the LOESS function.
+
+### 4.1. Pair 1 ###
+
+```{r}
+ggplot(data=anscombe, mapping=aes(x=x1, y=y1)) + 
+  geom_point() + 
+  labs(title="Pair 1") + 
+  stat_smooth(method="loess", se=FALSE)
+```
+
+While the best fit curve is not exactly a straight line, it is not far off.
+
+### 4.2. Pair 2 ###
+```{r}
+ggplot(data=anscombe, mapping=aes(x=x2, y=y2)) + 
+  geom_point() + 
+  labs(title="Pair 2") + 
+  stat_smooth(method="loess", se=FALSE)
+```
+
+As we expected, a curve illustrates this relationship perfectly. Reporting a Pearson linear correlation coefficient and producing a linear regression line are not very useful.
+
+### 4.3. Pair 3 ###
+
+```{r}
+ggplot(data=anscombe, mapping=aes(x=x3, y=y3)) + 
+  geom_point() + 
+  labs(title="Pair 3") + 
+  stat_smooth(method="loess", se=FALSE)
+```
+
+The one outlier pushes the LOESS function up. With only 14 observations, the one outlier does have significant influence. If this was real data, perhaps it does represent important information that the relationship changes as $x$ increases.  If you collected a large sample size, a single outlier will have less influence, and you would not see the LOESS curve affected so much. Instead it would follow the linear relationship described by the other points.
+

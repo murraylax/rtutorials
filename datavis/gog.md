@@ -3,7 +3,7 @@ title: "Introduction to the Grammar of Graphics"
 author: 
   - "James M. Murray, Ph.D."
   - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
+date: "Updated: October 04, 2018"
 
 output: 
   html_document:
@@ -51,13 +51,7 @@ If you have not already done so, download, install, and load the libraries with 
 
 
 * * * * 
-```{r,echo=FALSE, include=FALSE}
-library("tidyverse")
-library("scales")
-library("stringr")
-library("Hmisc")
-library("ggthemes")
-```
+
 
 ## 1. Introduction ##
 
@@ -82,13 +76,36 @@ The following three layers are the minimum necessary for any type of plot:
 *Data set:* The following example uses a sample from the 2016 Current Population Survey which is a monthly survey conducted by the U.S. Census Bureau and Bureau of Labor Statistics. The data is used, among other things, to compute employment statistics related to earnings, hours employed, and unemployment. This particular sample includes 1,552 observations and includes only head-of-households.  
 
 The line below downloads and loads the data set.
-```{r}
+
+```r
 load(url("http://murraylax.org/datasets/cps2016.RData"))
 ```
 
 The data is in a `data.frame` object called `df` and a description of the variables is given in another `data.frame` object called `df.desc`.  You can familiarize yourself with the data set by opening these data frames in *Rstudio*.  Alternatively, you can get a short description of the data frame  `df` with a call to the `str()` function.
-```{r}
+
+```r
 str(df)
+```
+
+```
+## 'data.frame':	1552 obs. of  17 variables:
+##  $ age        : num  46 37 35 38 66 28 50 49 63 43 ...
+##  $ incwage    : num  24000 86000 22000 35000 50000 24000 75000 52000 40000 30000 ...
+##  $ sex        : Factor w/ 2 levels "Female","Male": 1 2 1 2 2 1 1 2 2 2 ...
+##  $ race       : Factor w/ 5 levels "Asian/Pacific Islander",..: 5 5 2 5 5 5 5 5 5 5 ...
+##  $ empstat    : Factor w/ 4 levels "Armed Forces",..: 4 4 4 4 4 4 4 4 4 4 ...
+##  $ inlf       : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ unempl     : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ industry   : Factor w/ 7 levels "Agriculture, Forestry, and Fishing",..: 7 6 5 3 1 5 5 6 5 7 ...
+##  $ usualhrs   : num  32 40 NA 40 60 40 45 40 45 40 ...
+##  $ ureason    : Factor w/ 4 levels "Job Leaver","Job Loser",..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ veteran    : num  0 0 0 0 1 0 0 0 0 0 ...
+##  $ usualhrearn: num  14.4 41.2 NA 16.8 16 ...
+##  $ edu        : Ord.factor w/ 5 levels "Less than high school"<..: 2 4 3 1 3 3 5 3 3 3 ...
+##  $ medoop     : num  1000 3300 3570 1500 1730 ...
+##  $ insprem    : num  0 1000 1800 0 480 6500 0 2000 16000 4000 ...
+##  $ totmed     : num  1000 4300 5370 1500 2210 ...
+##  $ college    : num  0 1 0 0 0 0 1 0 0 0 ...
 ```
 
 ## 3 Example 1: Scatter Plot ##
@@ -96,9 +113,12 @@ We will use the three layers of the grammar of graphics above to create a basic 
 
 ### 3.1 Data and Aesthetics Layers ###
 We will first create a ggplot object with the first two layers, **data** and **aesthetics**.
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=incwage, y=totmed))
 ```
+
+![](gog_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 The function call `ggplot()` above sets two parameters.  The first parameter, `data`, is set equal to the data frame `df` which ggplot will look to for the data.  
 
@@ -110,10 +130,13 @@ What you will see is the foundation for the plot, but nothing to plot yet.  It d
 
 Additional layers can be "added" to the ggplot object using the addition symbol (+).  We next add a **geometry** layer.  There are many types of geometries that are available for ggplot.  We add *points* to the base plot above.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=incwage, y=totmed)) + 
   geom_point()
 ```
+
+![](gog_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 We have a plot, even if it is not too pretty, created with the minimum requirements for layers.  Like a minimal sentence with just a noun and verb, it communicates something, but maybe not very much, and maybe not very effectively. We will next add on a few layers to make the plot not only more visually appealing, but change the visualization so it is more effectively communicates the relationship between our two variables.
 
@@ -131,10 +154,13 @@ Here are some strategies we can employ with this plot to overcome our over-plott
 
 Let us first employ the first two strategies: making our points smaller and adding some transparency to them.  To do this, we will change our call to the geometry layer.  Consider the following plot:
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=incwage, y=totmed)) + 
  geom_point(alpha=0.6, size=0.7)
 ```
+
+![](gog_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 We passed two optional parameters to the function `geom_point()`.  The first `alpha=0.6` sets the transparency.  This is a number between 0 and 1, where 1 is completely opaque (the default) and 0 is completely invisible.  A value for transparency of 0.6 lets us see the points, but gives us a lot of transparency to also see through them. The second parameter, `size=0.7`, gives us a smaller point size. Picking the right level of transparency and size for a geometry takes some trial and error and will be different for every plot, and even different depending on your screen resolution and the resolution you choose should you save your plot.
 
@@ -142,11 +168,14 @@ Let us next zoom in so that our plot displays well the large majority of the dat
 
 In the code below, we explicitly add the Cartesian coordinate system with a call to the function `coord_cartesian()` and we specify the largest and smallest values for each the x- and y-axes.  In the code that follows, we start with the plot code we have already created and we add the coordinates layer.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=incwage, y=totmed)) + 
   geom_point(alpha=0.6, size=0.7) + 
   coord_cartesian(xlim=c(0,130000), ylim=c(0,30000))
 ```
+
+![](gog_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 The plot itself looks much better. While the wide variability in the data still does not make it too clear whether there is a strong positive correlation, we can see the distribution of the data quite well.  In the next subsection, we will fix up some of the non-data ink, including the axes scale labels, axes titles, and plot title.
 
@@ -154,7 +183,8 @@ The plot itself looks much better. While the wide variability in the data still 
 
 In this section, we clean up some of the non-data ink to make our graph more visually appealing and more effectively communicate our variables and how they are measured.  Below we give the axes more descriptive labels and give the plot a title.  We also saw in the previous subsection that the scale labels on the horizontal axes was inconveniently expressed in scientific notation (i.e. `5e+4` was given as a label rather than `50,000`).  The in code below, we add to our zoomed-in scatter plot calls to `scale_x_continuous()` and `scale_y_continuous()` which set the notation for the x- and y-axis scale labels, respectively. 
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=incwage, y=totmed)) + 
   geom_point(alpha=0.6, size=0.7) + 
   coord_cartesian(xlim=c(0,130000), ylim=c(0,30000)) +
@@ -162,11 +192,14 @@ ggplot(data=df, mapping=aes(x=incwage, y=totmed)) +
   scale_y_continuous(labels=dollar)
 ```
 
+![](gog_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
 The parameter `labels` in each of these functions is set equal to the *function* `dollar()`, which takes on a single numerical value and returns a string that expresses the same number with a dollar symbol and commas after every third digit from the decimal point. The `dollar()` function from the `scales` package. 
 
 We can set the titles for the x-axis, y-axis, and overall plot with a call to the `labs()` (short for labels) function. Here is our final scatter plot:
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=incwage, y=totmed)) + 
   geom_point(alpha=0.6, size=0.7) + 
   coord_cartesian(xlim=c(0,130000), ylim=c(0,30000)) +
@@ -176,6 +209,8 @@ ggplot(data=df, mapping=aes(x=incwage, y=totmed)) +
        x="Wage and Salary Income (dollars)", y="Total Medical Expenditures (dollars)")
 ```
 
+![](gog_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 
 ## 4. Example 2: Bar Chart ##
 
@@ -184,17 +219,27 @@ Let us use our same data set and build another common plot using the grammar of 
 ### 4.1. Data and Aesthetics Layers ###
 We start with a call to `ggplot()` that specifies the data and aesthetics layer.  We use the same data frame as before and map the x-axis to `edu` and the y-axis to `usualhrearn`.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn))
 ```
+
+![](gog_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 ### 4.2. Statistics and Geometry Layers ##
 In the case of a bar plot, we do not wish to graph the raw data, but rather a *statistic* that summarizes the data.  Our statistic is the *mean*.  We wish to compute the mean usual hourly earnings for each education level, and plot rectangular bars with a height equal to the mean.  To do this, we will not specify a geometry layer, but rather a **statistics layer** which will both compute the statistic we are interested in and specify the *bar* geometry.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar")
 ```
+
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](gog_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 We get a warning that thera are many missing observations not included because there are a number of people in our sample that are not employed so they did not have usual weekly hours and/or wage or salary income.  We still have over 1000 data points, so this is not problematic.
 
@@ -202,26 +247,41 @@ The call to `stat_summary()` specifies our statistics and geometry layer. The fi
 
 ### 4.3. Labels and Titles ###
 So that it is clear the vertical axis refers to usual hourly earnings in dollars, let us specify that the vertical scale labels be expressed in dollars.
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar") + 
   scale_y_continuous(labels=dollar)
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](gog_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
 Finally, we use the function `labs()` to add a descriptive title for plot and we remove the titles for the horizontal and vertical axes since those will be obvious from the title of the plot and the labels on the scales.
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar") + 
   scale_y_continuous(labels=dollar) + 
   labs(title="Usual Hourly Earnings by Education Level", x="", y="")
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](gog_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+
 ### 4.4. Fix Labels - Angled ###
 The labels for the education levels are long and overlap with one another.  To address this, we can specify a **theme layer**.  The theme layer lets us calibrate all non-data ink on our graph.  In this case, we will use the theme layer to display the x-axis labels at an angle so that the labels do not overlap and we can read them.  The `theme()` function has dozens of possible parameters to calibrate everything from axes labels, titles, tick marks, legend, placement of all of these, background color and shading, and much, much more.
 
 In the call below, we add a theme layer to our `bar.p` object with a call to `theme()` to fix the x-axis labels. 
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar") + 
   scale_y_continuous(labels=dollar) + 
@@ -229,57 +289,98 @@ ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) +
   theme(axis.text.x=element_text(angle=30, vjust=1, hjust=1))
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](gog_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
 We set the parameter for `axis.text.x` and call a function `element_text()` that allows us to specify an angle to write the text, vertical justification, and horizontal justification.  We set the text at a 30 degree angle, and set both vertical and horizontal justification equal to `1` so that text labels are right-aligned and top-aligned, which puts the end of the labels close to the horizontal axis.
 
 ### 4.5. Fix Labels - Text Wrap ###
 
 Alternatively, we can wrap our x-axis labels onto new lines so that they do not overwrite each other. To do this, we will change the text for the levels of the ordered factor variable, `edu`.  Let us remind ourselves what are these levels:
-```{r}
+
+```r
 levels(df$edu)
 ```
 
+```
+## [1] "Less than high school" "High school diploma"   "Some college"         
+## [4] "Baccalaureate degree"  "Advanced degree"
+```
+
 The code below calls the function `str_wrap()` to re-write the levels for `edu`:
-```{r}
+
+```r
 levels(df$edu) <- str_wrap( levels(df$edu), width=15 )
 ```
 The function `str_wrap()` takes as parameters a string or vector of strings and a desired width in characters. We pass the vector of strings that `levels(df$edu)` returns, we specify a maximum width of 15 characters, and `str_wrap()` outputs a new vector of strings that includes new lines as necessary to assure that no string goes over 15 characters in a single line.  We save that output to `levels(df$edu)`, which overrides the existing levels.
 
 Now let us view our levels.
-```{r}
+
+```r
 levels(df$edu)
+```
+
+```
+## [1] "Less than high\nschool" "High school\ndiploma"  
+## [3] "Some college"           "Baccalaureate\ndegree" 
+## [5] "Advanced degree"
 ```
 The newline characters, `\n`, indicate where a new line will appear.
 
 With the new levels created, let's re-run the code above that creates the plot.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar") + 
   scale_y_continuous(labels=dollar) + 
   labs(title="Usual Hourly Earnings by Education Level", x="", y="") 
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](gog_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+
 ### 4.6. Make it Look Pretty with Color and Themes ###
 Let's add some color to our plot. There are many ways of adding color to a plot. Sometimes you may want to map color to a variable, for example, so that different levels of education are represented by different colors. In this case, we will use just one color, but make it something prettier than gray.
 
 We again recreate the plot from scratch, copying and pasting most of the above code. We add an optional parameters to the `stat_summary()`, `fill="dodgerblue4"`. The `fill` parameter sets the color of the bars. See http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf for a long-list of recognized colors.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar", fill="dodgerblue4") +
   scale_y_continuous(labels=dollar) +
   labs(title="Usual Hourly Earnings by Education Level", x="", y="") 
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](gog_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+
 Let's finally remove the gray background, in favor of a more clean background. We can set aspects of the *theme layer*. The theme layer is used to customize all the non-data ink on the graph. You can use the `theme()` function to set one or dozens of options, or use `theme_` functions that set many of these for you to create a visually attractive theme. We will use the `theme_bw()` function.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar", fill="dodgerblue4") +
   scale_y_continuous(labels=dollar) +
   labs(title="Usual Hourly Earnings by Education Level", x="", y="") +
   theme_bw()
 ```
+
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](gog_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
 
 ## 5. Conclusion ##
 In this tutorial, we introduced the concept of the grammar of graphics and illustrated how to use the `ggplot` package to create graphics using a minimal number of grammar layers. There are still more layers in the grammar of graphics to learn and a whole world of data visualizations and graphical customization that can be built with ggplot. This tutorial sets the framework that is used for all graphics and illustrates the grammar of graphics with two of the most simple and common plot types.

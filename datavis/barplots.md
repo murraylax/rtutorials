@@ -3,7 +3,7 @@ title: "Bar Plots to Illustrate Means"
 author: 
   - "James M. Murray, Ph.D."
   - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
+date: "Updated: October 09, 2018"
 
 output: 
   html_document:
@@ -65,14 +65,7 @@ If you have not already done so, download, install, and load the libraries with 
 
 
 * * * * 
-```{r,echo=FALSE, include=FALSE}
-library("tidyverse")
-library("scales")
-library("stringr")
-library("Hmisc")
-library("forcats")
-library("ggthemes")
-```
+
 
 ## 1 Introduction ##
 
@@ -81,13 +74,36 @@ The bar plots in this tutorial visually describe the mean of a numerical variabl
 **Data set:** The following examples use a sample from the 2016 Current Population Survey which is a monthly survey conducted by the U.S. Census Bureau and Bureau of Labor Statistics. The data is used, among other things, to compute employment statistics such related to earnings, hours employed, and unemployment. This particular sample includes 1,552 observations and includes only head-of-households.  
 
 The line below downloads and loads the data set.
-```{r}
+
+```r
 load(url("http://murraylax.org/datasets/cps2016.RData"))
 ```
 
 The data is in a `data.frame` object called `df` and a description of the variables is given in another `data.frame` object called `df.desc`.  You can familiarize yourself with the data set by opening these data frames in *Rstudio*.  Alternatively, you can get a short description of the data frame  `df` with a call to the `str()` function.
-```{r}
+
+```r
 str(df)
+```
+
+```
+## 'data.frame':	1552 obs. of  17 variables:
+##  $ age        : num  46 37 35 38 66 28 50 49 63 43 ...
+##  $ incwage    : num  24000 86000 22000 35000 50000 24000 75000 52000 40000 30000 ...
+##  $ sex        : Factor w/ 2 levels "Female","Male": 1 2 1 2 2 1 1 2 2 2 ...
+##  $ race       : Factor w/ 5 levels "Asian/Pacific Islander",..: 5 5 2 5 5 5 5 5 5 5 ...
+##  $ empstat    : Factor w/ 4 levels "Armed Forces",..: 4 4 4 4 4 4 4 4 4 4 ...
+##  $ inlf       : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ unempl     : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ industry   : Factor w/ 7 levels "Agriculture, Forestry, and Fishing",..: 7 6 5 3 1 5 5 6 5 7 ...
+##  $ usualhrs   : num  32 40 NA 40 60 40 45 40 45 40 ...
+##  $ ureason    : Factor w/ 4 levels "Job Leaver","Job Loser",..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ veteran    : num  0 0 0 0 1 0 0 0 0 0 ...
+##  $ usualhrearn: num  14.4 41.2 NA 16.8 16 ...
+##  $ edu        : Ord.factor w/ 5 levels "Less than high school"<..: 2 4 3 1 3 3 5 3 3 3 ...
+##  $ medoop     : num  1000 3300 3570 1500 1730 ...
+##  $ insprem    : num  0 1000 1800 0 480 6500 0 2000 16000 4000 ...
+##  $ totmed     : num  1000 4300 5370 1500 2210 ...
+##  $ college    : num  0 1 0 0 0 0 1 0 0 0 ...
 ```
 
 ## 2 Creating the Bar Plot ##
@@ -97,9 +113,12 @@ In this example, we compare the mean usual hourly earnings (`usualhrearn`) acros
 ### 2.1 Data and Aesthetics Layers ###
 We start with a call to `ggplot()` that specifies the data and aesthetics layers.  We set the data parameter equal to the data frame, `df`, and set the mapping with a call to the `aes()` function that maps the x-axis to `industry` and the y-axis to `usualhrearn`.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn))
 ```
+
+![](barplots_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 This sets up the first two layers of the plot which is a useful base to save.  We still do not have a visual plot as we have not completed the minimal number of layers.  We still have to specify a geometry layer to have some kind of shape to draw. We do this indirectly in the next subsection.
 
@@ -107,10 +126,17 @@ This sets up the first two layers of the plot which is a useful base to save.  W
 
 In the case of a bar plot, we do not wish to graph the raw data, but rather a *statistic* that summarizes the data.  Our statistic is the *mean*.  We wish to compute the mean of the usual hourly earnings for each industry, and plot rectangular bars with a height equal to the mean.  To do this, we will not specify a geometry layer, but rather a **statistics layer** which will both compute the statistic in which we are interested and specify the *bar* geometry.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar")
 ```
+
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 The call to `stat_summary()` specifies our statistics and geometry layer. The first parameter `fun.data=mean_sdl` tells `stat_summary()` what function to call to calculate the desired statistics.  The function `mean_sdl()` comes from the `Hmisc` package. It takes a single variable as a parameter and computes the mean and lower and upper limits of a confidence interval.  The second parameter, `geom="bar"`, tells `stat_summary()` to use the bar geometry for the statistics it calculates.
 
@@ -118,52 +144,107 @@ We get a warning that many observations were not included because there are a nu
 
 ### 2.3. Fix Labels - Text Wrap ###
 The labels for the industries are long and overlap with one another.  To address this, we can wrap our x-axis labels onto new lines so that they do not overwrite each other. To do this, we will change the text for the levels of the factor variable, `industry`.  Let us remind ourselves what are these levels:
-```{r}
+
+```r
 levels(df$industry)
 ```
 
+```
+## [1] "Agriculture, Forestry, and Fishing"                
+## [2] "Finance, Insurance, and Real Estate"               
+## [3] "Manufacturing"                                     
+## [4] "Public Administration"                             
+## [5] "Services"                                          
+## [6] "Transportation, Communication, and Other Utilities"
+## [7] "Wholesale and Retail Trade"
+```
+
 The code below calls the function `str_wrap()` from the `stringr` package to re-write the levels for `industry`:
-```{r}
+
+```r
 levels(df$industry) <- str_wrap( levels(df$industry), width=12 )
 ```
 The function `str_wrap()` takes as parameters a string or vector of strings and a desired width in characters. We pass the vector of strings that `levels(df$industry)` returns, we specify a maximum width of 12 characters, and `str_wrap()` outputs a new vector of strings that includes new lines as necessary to assure that no string goes over 12 characters in a single line.  We save that output to `levels(df$industry)`, which overrides the existing levels.
 
 Now let us view our levels.
-```{r}
+
+```r
 levels(df$industry)
+```
+
+```
+## [1] "Agriculture,\nForestry,\nand Fishing"                 
+## [2] "Finance,\nInsurance,\nand Real\nEstate"               
+## [3] "Manufacturing"                                        
+## [4] "Public\nAdministration"                               
+## [5] "Services"                                             
+## [6] "Transportation,\nCommunication,\nand Other\nUtilities"
+## [7] "Wholesale\nand Retail\nTrade"
 ```
 The newline characters, `\n`, indicate where a new line will appear.
 
 Let us now recreate the plot:
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar")
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 ### 2.4. Labels and Titles ###
 The vertical axis is the mean usual hourly earnings expressed in dollars.  So that this is clear to the reader, let us specify that the labels on the scale be expressed in dollars. We can do this with a call to `scale_y_continuous()` which allows us to customize the scale on the y-axis.  We set the optional parameter `labels` equal to the *function* dollar() which takes on a single numerical value for a parameter and returns a string with that same number with a dollar sign and commas for every third digit left of the decimal point.
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar") + 
   scale_y_continuous(labels=dollar)
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
 Next, we use the function `labs()` to add a descriptive title for plot and we remove the titles for the horizontal and vertical axes since those will be obvious from the title of the plot and the labels on the scales.
-```{r, fig.height=5.5}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar") + 
   scale_y_continuous(labels=dollar) + 
   labs(title="Usual Hourly Earnings by Industry", x="", y="")
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
 ### 2.5. Reordering Bars by Mean ###
 It is often useful for visual communication if the bars are ordered by height (mean).  This allows the reader to determine at a glance which industries earn the highest and lowest wages and where a particular industry falls in the distribution.
 
 To order the bars by means, we need to create a new industry variable that specifies an order for the levels (categories).  Currently, industry is a factor (categorical) variable whose levels are given in alphabetical order.  We can verify this with a call to `levels()`.
 
-```{r}
+
+```r
 levels(df$industry)
+```
+
+```
+## [1] "Agriculture,\nForestry,\nand Fishing"                 
+## [2] "Finance,\nInsurance,\nand Real\nEstate"               
+## [3] "Manufacturing"                                        
+## [4] "Public\nAdministration"                               
+## [5] "Services"                                             
+## [6] "Transportation,\nCommunication,\nand Other\nUtilities"
+## [7] "Wholesale\nand Retail\nTrade"
 ```
 
 What we need to do is order the levels of industry according to a statistic (the mean) of another variable (`usualhrearn`). A function `fct_reorder()` in the library `forcats` can do this.
@@ -172,29 +253,44 @@ The function takes four parameters: (1) the factor variable to order levels, (2)
 
 In the code below, we call `fct_reorder()` and let the output overwrite our current `industry` variable in data frame `df`.
 
-```{r}
+
+```r
 df$industry <- fct_reorder(df$industry, df$usualhrearn, mean, na.rm=TRUE)
 ```
 
 Now we can recreate our bar plot, and the industries will be presented left to right in increasing order.
 
-```{r, fig.height=5.5}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar") + 
   scale_y_continuous(labels=dollar) + 
   labs(title="Usual Hourly Earnings by Industry", x="", y="")
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
 ### 2.6. Flip Coordinates ###
 It is sometimes more convenient to display horizontal bars rather than vertical bars, especially if there are a lot of categories.  We can flip the horizontal and vertical axes with a call to `coord_flip()` which is one of many functions that customizes the coordinate layer.  In the call below, we preserve our most recent plot that is saved in `bar.ord.p` and add the coordinate layer.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn)) + 
   stat_summary(fun.data=mean_sdl, geom="bar") + 
   scale_y_continuous(labels=dollar) + 
   labs(title="Usual Hourly Earnings by Industry", x="", y="") + 
   coord_flip()
 ```
+
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 ## 2.7. Using Color to Highlight One Category ##
 
@@ -204,7 +300,8 @@ Let us suppose that our bar plot is part of a study with a focus on the manufact
 
 Color is visual attribute that can be mapped to a variable in the *aesthetics layer*.  Let us first create a dummy variable called `manu` that is equal to 1 if the industry variable is equal to "Manufacturing" and 0 otherwise.
 
-```{r}
+
+```r
 df$manu <- (df$industry == "Manufacturing")
 ```
 
@@ -212,15 +309,19 @@ The expression `(df$industry == "Manufacturing")` will compare every observation
 
 Next, we build our plot again from the beginning, this time including another mapping in the aesthetics layer.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu))
 ```
+
+![](barplots_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 The call to `aes()` now includes `fill=manu` which maps the fill visual attribute (which refers to the color of the bars) to the dummy variable `manu`.
 
 Let us finish up the graph with the statistics, theme, and coordinates layers as we have done above.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   stat_summary(fun.y=mean, geom="bar") +
   scale_y_continuous(labels=dollar) +
@@ -229,13 +330,20 @@ ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   theme(legend.position="none")
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+
 By default, ggplot will provide a legend that describes the color mapping to the dummy variable `manu`.  The legend is not necessary, as it is obvious from the graph that only the manufacturing bar is a different color than the others.  We remove the legend with the following call to alter the theme layer, `theme(legend.position="none")`.
 
 If you prefer different colors, you can alter the fill color scale.  The color scale is a visual scale just like the vertical and horizontal axes on the Cartesian plane, and the method for customizing the scale is similar.  Since we only have two levels for color (`TRUE` or `FALSE` on whether industry is manufacturing) we only need a color scale with two colors.  
 
 The code below defines our binary color scale with colors of our choosing and augments the `bar.manu.p` object with our new scale. I chose the colors "deepskyblue4" and "seagreen". You can view all your predefined color choices at http://sape.inf.usi.ch/quick-reference/ggplot2/colour. It is also possible to make up your own colors by specifying values for the quantities of red, green, and blue.
 
-```{r, fig.width=6.5}
+
+```r
 mycols <- c("deepskyblue4", "seagreen")
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   stat_summary(fun.y=mean, geom="bar") +
@@ -246,6 +354,12 @@ ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   scale_fill_manual(values=mycols)
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+
 ## 3. Error Bars ##
 The purpose of statistics (and data visualization is visual communication of statistics) is to use sample data to make inferences about a whole population.  The researcher and reader likely want to know if differences in bar heights are due to actual true differences in usual hourly earnings between industries, or are the differences merely due to statistical chance based on random sampling error. The bar plots without error bars, like those above, do not allow for statistical inference.  Moreover, the bar plots can be deceptive if large differences in bar heights are due large degrees of sampling error.
 
@@ -255,7 +369,8 @@ We can add error bars to the bar plots that visually describe the confidence int
 
 The code below adds a statistics layer, which makes a call to the function `mean_cl_bootl()` which computes the mean confidence interval for each category based on a bootstrapping method (a simulation technique to avoid making an assumption about a normal distribution).  Below we use our existing bar plot and add on the appropriate statistics layer.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   stat_summary(fun.y=mean, geom="bar") +
   scale_y_continuous(labels=dollar) +
@@ -265,6 +380,14 @@ ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   scale_fill_manual(values=mycols) + 
   stat_summary(fun.data=mean_cl_boot, geom="errorbar", width=0.3)
 ```
+
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
 
 The line `stat_summary(fun.data=mean_cl_boot, geom="errorbar", width=0.3)` adds another statistics and geometry layer to our existing graph.  We set the parameter `fun.data` equal to `mean_cl_boot` so that the `mean_cl_boot()` function is called to compute the confidence interval. The parameter `geom="errorbar"` specifies the error bar geometry.  The `width=0.3` parameter sets the width of the lines in the error bar.
 
@@ -280,17 +403,23 @@ In past sections we created visualizations that communicated usual hourly earnin
 
 In the code below we create a vertical bar plot in which we map usual hourly earnings to the vertical axis, industry to the horizontal axis, and sex to the fill color of the bar.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=sex))
 ```
 
+![](barplots_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+
 Let us add to the base plot the many visual improvements we have made above, including expressing the numbers on the vertical axis in dollars, rotating the text labels on the horizontal axis, creating a title, and clearing the axes titles.
 
-```{r, fig.width=6.5, fig.height=5.5}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=sex)) +
   scale_y_continuous(labels=dollar) + 
   labs(title="Usual Hourly Earnings by Industry", x="", y="") 
 ```
+
+![](barplots_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
 
 ### 4.1 Multiple Bars ###
 
@@ -298,24 +427,33 @@ We still do not have any information in the visualization to show because we hav
 
 First we create a position object called `posn.d` using the `position_dodge()` function which tells ggplot how far apart to separate the centers of the geometries.  With some experimentation, one can find a `width=0.95` creates bars that do not overlap and do not have space in between.
 
-```{r}
+
+```r
 posn.d <- position_dodge(width=0.95)
 ```
 
 Next we create the plot, adding to the base plot we created above and saving the new plot in an object called `base.two.p`.
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=sex)) +
   scale_y_continuous(labels=dollar) + 
   labs(title="Usual Hourly Earnings by Industry", x="", y="") + 
   stat_summary(fun.data=mean_sdl, geom="bar", position=posn.d)
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+
 Besides the `position` parameter in our call to `stat_summary()` we also specify the height of the bar to be equal to the mean summary statistic using the parameter `fun.data=mean_sdl` and geometry to be a bar with the `geom="bar"` parameter.  
 
 We can add our error bars as before:
 
-```{r}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=sex)) +
   scale_y_continuous(labels=dollar) + 
   labs(title="Usual Hourly Earnings by Industry", x="", y="") + 
@@ -323,13 +461,22 @@ ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=sex)) +
   stat_summary(fun.data=mean_cl_boot, geom="errorbar", position=posn.d, width=0.3)
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+
 ## 4.2 Multiple Facets ##
 
 Instead of separating males and females by color, we can create multiple facets with the **facets layer**, one for each sex.  Facets are multiple plots, usually with a matching scale, placed next to each other for comparison.  
 
 Before we add facets, let us first build our plot. Read the code that follows and assure yourself that you understand every line.
 
-```{r, fig.width=7.5, fig.height=7}
+
+```r
 # Set a longer length string for the industries, 20 characters
 levels(df$industry) <- str_wrap( levels(df$industry), width=20 )
 
@@ -343,6 +490,14 @@ ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   scale_y_continuous(labels=dollar) + 
   scale_fill_manual(values=mycols) 
 ```
+
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 The first line of the `ggplot()` call above sets the data and aesthetics layer.  In the aesthetics layer, we map the x-axis to `industry`, y-axis to `usualhrearn`, and to highlight manufacturing, we map both fill color and line color to `manu`. 
 
@@ -358,7 +513,8 @@ In the last two lines we manipulate our scales.  In the seventh line, we set the
 
 We can add a facets layer with a call to `facet_grid()` which will create a grid of graphs based on different levels of categorical variables.  The function expects a *formula* in the form `row_factor ~ col_factor`.  Here we finish our grid bar plot
 
-```{r, fig.width=7.5, fig.height=7}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   stat_summary(fun.y=mean, geom="bar") + 
   stat_summary(fun.data=mean_cl_boot, geom="errorbar", width=0.3) +
@@ -370,11 +526,20 @@ ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   facet_grid(sex~.)
 ```
 
+```
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+
+## Warning: Removed 271 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
+
 The call `facet_grid(sex~.)` sets the row variable equal to sex and no column variable.  With two levels for sex (male and female), we have two rows of bar plots, one for males and another for females. Note that the top and bottom bar plots have exactly the same scale which is presented only once on the bottom.
 
 If you want to display bar plots for the levels men and women and for men and women overall, add the `margins=TRUE` parameter to the `facet_grid()` function call.
 
-```{r, fig.width=7.5, fig.height=9.5}
+
+```r
 ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   stat_summary(fun.y=mean, geom="bar") + 
   stat_summary(fun.data=mean_cl_boot, geom="errorbar", width=0.3) +
@@ -385,6 +550,14 @@ ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
   scale_fill_manual(values=mycols) + 
   facet_grid(sex~., margins=TRUE)
 ```
+
+```
+## Warning: Removed 542 rows containing non-finite values (stat_summary).
+
+## Warning: Removed 542 rows containing non-finite values (stat_summary).
+```
+
+![](barplots_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
 
 
 ----

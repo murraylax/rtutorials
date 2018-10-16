@@ -3,7 +3,7 @@ title: "Bar Plots to Illustrate Medians"
 author: 
   - "James M. Murray, Ph.D."
   - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
+date: "Updated: October 15, 2018"
 
 output: 
   html_document:
@@ -58,13 +58,7 @@ If you have not already done so, download, install, and load the libraries with 
 `library("psych") # This needs to be executed every time you load R`
 
 * * * * 
-```{r,echo=FALSE, include=FALSE}
-library("tidyverse")
-library("scales")
-library("stringr")
-library("Hmisc")
-library("psych")
-```
+
 
 ## 1 Introduction ##
 
@@ -74,7 +68,8 @@ When illustrating means and their confidence intervals, we can call `stat_summar
 
 The following `source()` call downloads code I developed which replicate the behavior for `mean_sdl()` and `mean_cl_boot()` but for the interpolated median. 
 
-```{r, warning=FALSE, message=FALSE}
+
+```r
 source("http://murraylax.org/code/R/imedian.R")
 ```
 
@@ -84,7 +79,8 @@ This tutorial uses data from the National Financial Capability Study is performe
 
 The following command downloads the dataset and stores it in an R data frame called `df`.
 
-```{r}
+
+```r
 load(url("http://murraylax.org/datasets/findata.RData"))
 ```
 
@@ -92,43 +88,104 @@ In this example, we compare the interpolated median income (`Incomecat`) for peo
 
 The code below verifies the scale of measurement with a call to `class()`, examines the category labels with `levels()`, and provides some counts for how many observations are in each category with `table()`:
 
-```{r}
+
+```r
 class(df$Incomecat)
+```
+
+```
+## [1] "ordered" "factor"
+```
+
+```r
 levels(df$Incomecat)
+```
+
+```
+## [1] "Less than $15,000"                       
+## [2] "At least $15,000 but less than $25,000"  
+## [3] "At least $25,000 but less than $35,000"  
+## [4] "At least $35,000 but less than $50,000"  
+## [5] "At least $50,000 but less than $75,000"  
+## [6] "At least $75,000 but less than $100,000" 
+## [7] "At least $100,000 but less than $150,000"
+## [8] "$150,000 or more"
+```
+
+```r
 table(df$Incomecat)
+```
+
+```
+## 
+##                        Less than $15,000 
+##                                     1277 
+##   At least $15,000 but less than $25,000 
+##                                     1129 
+##   At least $25,000 but less than $35,000 
+##                                     1130 
+##   At least $35,000 but less than $50,000 
+##                                     1479 
+##   At least $50,000 but less than $75,000 
+##                                     2057 
+##  At least $75,000 but less than $100,000 
+##                                     1243 
+## At least $100,000 but less than $150,000 
+##                                     1145 
+##                         $150,000 or more 
+##                                      540
 ```
 
 ## 3 Creating the Bar Plot ##
 
 Because `Incomecat` is an ordinal variable, we cannot compute a mean. However, because ordinal variables can be ordered, we can compute medians and interpolated medians. Unfortunately, `R` returns an error if we try to compute either of these with a non-numeric variable. Instead, we must first convert the value to a numeric:
 
-```{r}
+
+```r
 median(as.numeric(df$Incomecat))
+```
+
+```
+## [1] 4
+```
+
+```r
 interp.median(as.numeric(df$Incomecat))
+```
+
+```
+## [1] 4.489858
 ```
 
 A median equal to 4 implies the median is the 4th level, or "At least \$35,000 but less than \$50,000"
 
 We can use the functions `imedian_sdl()` and `imedian_cl_boot()` from the `imedian.R` file we included above to compute the interpolated median and bootstrapped confidence interval for the interpolated and include these in a plot. Again, we have to coerce `Incomecat` to numeric for the procedure to work.
 
-```{r}
+
+```r
 ggplot(df, aes(x=Edu, y=as.numeric(Incomecat))) +
   stat_summary(fun.data=imedian_sdl, geom="bar") +
   stat_summary(fun.data=imedian_cl_boot, geom="errorbar", width=0.4)
 ```
 
+![](medianplots_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 The vertical scale currently shows values 0-6 which is not too informative. The scale is the levels for income category, for which there are 7, and which have the descriptive labels above that give income ranges.  The code below alters the vertical scale to include the appropriate descriptions for the vertical scale. It uses the `scale_y_orderedfactor()` function, which is also included in `imedian.R`. We pass to this function the levels we wish to use for the labels.
 
-```{r}
+
+```r
 ggplot(df, aes(x=Edu, y=as.numeric(Incomecat))) +
   stat_summary(fun.data=imedian_sdl, geom="bar") +
   stat_summary(fun.data=imedian_cl_boot, geom="errorbar", width=0.4) +
   scale_y_orderedfactor( levels(df$Incomecat) )
 ```
 
+![](medianplots_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
 All that remains is to pretty it up. Below I break apart the labels so they wrap to new lines (two lines that call `str_wrap()`), add color to the bars (`fill="forestgreen"`), give it a title and clean up the x- and y-axis labels (call to `labs()`), give it a white background (`theme_bw()`), and remove the vertical lines in the grid which are not necessary for bar charts (associated with the calls to `element_blank()`).
 
-```{r}
+
+```r
 levels(df$Edu) <- str_wrap(levels(df$Edu), 12)
 levels(df$Incomecat) <- str_wrap(levels(df$Incomecat), 20)
 
@@ -141,3 +198,5 @@ ggplot(df, aes(x=Edu, y=as.numeric(Incomecat))) +
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank())
 ```
+
+![](medianplots_files/figure-html/unnamed-chunk-8-1.png)<!-- -->

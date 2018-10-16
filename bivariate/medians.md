@@ -3,7 +3,7 @@ title: "Median and Interpolated Median"
 author: 
   - "James M. Murray, Ph.D."
   - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
+date: "Updated: October 15, 2018"
 output: 
   html_document:
     keep_md: yes
@@ -48,22 +48,30 @@ In this dataset, students in fourth through sixth from three school districts in
 
 The code below downloads the dataset and assigns the dataset to a variable we call `kidsdata`.
 
-```{r, echo=FALSE, include=FALSE}
-library("psych")
-library("tidyverse")
-```
-```{r}
+
+
+```r
 kidsdata <- read.csv("http://www.murraylax.org/datasets/gradeschool.csv")
 ```
 
 ## 2. Compute Medians
 The dataset includes variables called `Grades` and `Money`, among others.  Compute the median importance for each of these variables with the following code:
 
-```{r}
+
+```r
 median(kidsdata$Grades)
 ```
-```{r}
+
+```
+## [1] 3
+```
+
+```r
 median(kidsdata$Money)
+```
+
+```
+## [1] 3
 ```
 
 The median value for both of these variables is equal to 3.
@@ -72,7 +80,8 @@ The median value for both of these variables is equal to 3.
 
 A **histogram** is a bar graph illustrating the number of observations in a sample fall in several intervals.  Let's display a histogram of the importance students place on grades in terms of being popular with the following code:
 
-```{r, fig.height=4}
+
+```r
 ggplot(data=kidsdata, mapping=aes(x=as.factor(Grades))) + 
   geom_bar(fill="dodgerblue4") +
   labs(title="Histogram for Importance of Grades",
@@ -80,6 +89,8 @@ ggplot(data=kidsdata, mapping=aes(x=as.factor(Grades))) +
        y="Frequency") +
   theme_bw()
 ```
+
+![](medians_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 The code above uses the `ggplot2` package to create a histogram plot. The first segment,
 
@@ -104,7 +115,8 @@ set up the title of the plot and the labels for the x-axis and y-axis.
 Finally, the segment `theme_bw()` sets up a simple black and white theme for the background.
 
 Let's display a histogram for the importance of money:
-```{r, fig.height=4}
+
+```r
 ggplot(data=kidsdata, mapping=aes(x=as.factor(Money))) + 
   geom_bar(fill="dodgerblue4") +
   labs(title="Histogram for Importance of Money",
@@ -112,6 +124,8 @@ ggplot(data=kidsdata, mapping=aes(x=as.factor(Money))) +
        y="Frequency") +
   theme_bw()
 ```
+
+![](medians_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 While the money had the same median importance (3) as grades, we can see from the histogram that a much smaller portion of students ranked money below the median (at 1 or 2) than above the median (at 4).
 
@@ -126,11 +140,21 @@ The interpolated median gives a measure within the upper bound and lower bound o
 While the interpolated median returns a value on a continuous scale (i.e. fractional numbers above and below the median), it is appropriate to use on ordinal data, as well as interval and ratio data.
 
 Let's calculate the interpolated median for `Grades` and `Money`:
-```{r}
+
+```r
 interp.median(kidsdata$Grades)
 ```
-```{r}
+
+```
+## [1] 2.665414
+```
+
+```r
 interp.median(kidsdata$Money)
+```
+
+```
+## [1] 3.484848
 ```
 
 We can see from these measures of interpolated medians that the center of the sample distribution for the level of importance for grades (2.67) is less than the center of the sample distribution for money (3.48).  Therefore, while both of the samples had an equal median equal to 3, we can say that in our sample the centers of the samples imply the students put a higher level of importance for grades than money (lower numbers were used to indicate more important rank).

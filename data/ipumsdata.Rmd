@@ -1,36 +1,31 @@
 ---
-title: "Using IPUMS Data"
+title: Using IPUMS Data
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document:
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
 
-[PDF file location: http://www.murraylax.org/rtutorials/ipumsdata.pdf](http://www.murraylax.org/rtutorials/ipumsdata.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/ipumsdata.html](http://www.murraylax.org/rtutorials/ipumsdata.html)
-
-* * * * 
 *Note on required packages:*  The following code requires the packages in the package `SAScii`. This package contains functions to run SAS importation code in R, for the purposes of loading a data set in R designed to be opened in SAS.
 
-`install.packages("SAScii") # This only needs to be executed once for your machine`  
+```{r,echo=TRUE, eval=FALSE}
+# This only needs to be executed once for your machine
+install.packages("SAScii") 
 
-`library("SAScii") # This needs to be executed every time you load R`
+# This needs to be executed every time you load R`
+library("SAScii") 
+```
 
 * * * * 
 ```{r,echo=FALSE, include=FALSE}
 library("SAScii")
 ```
 
-## 1. Downloading the Data ##
+# Downloading the Data #
 
 After you have submitted an extract, you will be brought to a screen like this one:
 
@@ -46,9 +41,9 @@ When the `data` link appears, download this file and note the folder in which it
 
 Also download the link to the `SAS` command file. This is code for SAS (another statistical software program) that contains the code to process and open the data file. Save this file in the same folder. The file I downloaded for this tutorial is named `cps_00013.sas`.
 
-## 2. Opening the Data ##
+# Opening the Data #
 
-In the file viewer in Rstudio, navigate to the folder where you saved the data and SAS script files.  You can navigate to a folder by clicking the `...` button in the upper-right corner of the file viewer. 
+In the file viewer in RStudio, navigate to the folder where you saved the data and SAS script files.  You can navigate to a folder by clicking the `...` button in the upper-right corner of the file viewer. 
 
 Once you have navigated to the correct folder, click on the `More` button above the file viewer, and click `Set As Working Directory`, as shown in the screenshot below.
 
@@ -60,7 +55,10 @@ Once you have navigated to the correct folder, click on the `More` button above 
 
 The following code processes the data using the SAS script and stores the data as a `data.frame` object called `df`.
 
-`df <- read.SAScii("cps_00013.dat.gz", "cps_00013.sas")`
+```{r, eval=FALSE}
+df <- read.SAScii("cps_00013.dat.gz", "cps_00013.sas")
+```
+
 ```{r, include=FALSE}
 load("cps13.RData")
 ```
@@ -73,11 +71,11 @@ str(df)
 
 The data frame includes 5 variables and more than 185,000 observations.  
 
-## 3. Re-coding Variables ##
+# Re-coding Variables #
 
 A number of the variables include codes for categories and missing observations. In this section, we take a closer look at these variables and discuss how to re-code them to make them usable.
 
-### 3.1 Re-coding to an Ordered Factor: Education ###
+## Re-coding to an Ordered Factor: Education ##
 
 The variable `EDUC` is a code between 000 and 125 for the level of education, and includes values of 999 for missing or unknown values. The following screenshots from https://cps.ipums.org/cps-action/variables/EDUC#codes_section show the meaning for each code.
 
@@ -147,7 +145,7 @@ summary(df$edu)
 
 The output to `class(df$edu)` confirms that we have created an ordered factor. The output `levels(df$edu)` shows that our levels for education have been established. Finally, the output of `summary(df$edu)` gives us some frequency statistics regarding our sample.
 
-### 3.2 Re-coding a Factor: Worker Classification ###
+## Re-coding a Factor: Worker Classification ##
 
 The variable, `CLASSWKR`, is a code between 10 and 29 for the type of worker.  The following screenshot from https://cps.ipums.org/cps-action/variables/CLASSWKR#codes_section shows the meaning for each code.
 
@@ -190,7 +188,7 @@ Finally, we will cast our new variable `class` as a factor variable (i.e. a cate
 df$class <- factor(df$class)
 ```
 
-### 3.3 Coding Missing Observations in Numerical Data ###
+## Coding Missing Observations in Numerical Data ##
 
 Usual hours worked per week (`UHRSWORKT`) and weekly earnings (`EARNWEEK`) are both numerical variables, but they both have numeric codes for missing values. 
 
@@ -213,5 +211,19 @@ In the code below, we create a new variable called `earnweek`, set it equal to `
 ```{r}
 df$earnweek <- df$EARNWEEK
 df$earnweek[ df$EARNWEEK == 9999.99 ] <- NA
+```
+
+# Saving as RData 
+
+Finally, we can save the data frame `df` as an `.RData` file, which will allow us to easily and quickly load the ready-to-use data frame.
+
+```{r}
+save(df, file="cps13.RData")
+```
+
+We can load it again with a call to load.
+
+```{r}
+load("cps13.RData")
 ```
 

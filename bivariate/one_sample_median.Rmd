@@ -1,30 +1,28 @@
 ---
 title: "Estimating the Population Median"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document: 
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
 
-[PDF file location: http://www.murraylax.org/rtutorials/one_sample_median.pdf](http://www.murraylax.org/rtutorials/one_sample_median.pdf)
+**Note on required packages:**  The following code required the package `psych` to perform statistics related to the median.  If you have not already done so, download, install, and load the library with the following code:
 
-[HTML file location: http://www.murraylax.org/rtutorials/one_sample_median.html](http://www.murraylax.org/rtutorials/one_sample_median.html)
+```{r,echo=TRUE, eval=FALSE}
+# This only needs to be executed once for your machine
+install.packages("psych") 
+
+# This needs to be executed every time you load R
+library("psych")
+```
 
 * * *
-*Note on required packages:*  The following code required the package `psych` to perform statistics related to the median.  If you have not already done so, download, install, and load the library with the following code:
 
-`install.packages("psych")`  
-
-`library("psych")`
-
-* * *
+# Introduction 
 
 The **population median** is the value of the 50th percentile of some variable for all the members of the population.  When members of the population are sorted by this value, the median is the middle value.
 
@@ -40,31 +38,35 @@ The interpolated median gives a measure within the upper bound and lower bound o
 
 While the interpolated median returns a value on a continuous scale (i.e. fractional numbers above and below the median), it is appropriate to use on ordinal data, as well as interval and ratio data.
 
-## 1. Example Data Set ##
+# Example Data Set 
+
 In this data set, students in fourth through sixth grades from three school districts in Michigan ranked their how important each of the following were for achieving popularity: achieving good grades, athletic ability, having popularity, and having money.  A rank of 1 indicates highest importance and a rank of 4 indicates lowest importance.  The data set comes from Chase, M. A., and Dummer, G. M. (1992), "The Role of Sports as a Social Determinant for Children," *Research Quarterly for Exercise and Sport*, 63, 418-424.
 
-The code below downloads the data set and assigns the data set to a variable we call `kidsdata`.
+The code below downloads and loads the data set.
 
 ```{r, echo=FALSE, include=FALSE}
 library("psych")
 ```
+
 ```{r}
-kidsdata <- read.csv("http://www.murraylax.org/datasets/gradeschool.csv")
+load(url("http://www.murraylax.org/datasets/gradeschool.RData"))
 ```
 
-## 2. Compute Medians ##
+# Compute Medians 
+
 The dataset includes a variable called `Grades`, which is a ranking on a scale of 1-4 for how important students find good grades are for maintaining popularity.  Let us compute the sample median and sample interpolated median for this variable:
 
 ```{r}
-median(kidsdata$Grades)
+median(df$Grades)
 ```
 ```{r}
-interp.median(kidsdata$Grades)
+interp.median(df$Grades)
 ```
 
 The median ranking for grades is equal to 3, while the interpolated median equal to 2.67 indicates the distribution is more heavily weighted below 3.  Therefore, even though the data is on a discrete scale for 1 to 4, the data is centered most closely to 2.67.  
 
-## 3. Confidence Intervals for the Median ##
+# Confidence Intervals for the Median 
+
 It is most common to form confidence intervals for the median using bootstrapped samples.  This procedure uses the data in the single sample to simulate thousands of possible samples, and for each simulation computes the median and/or interpolated median.
 
 A short R script on my website http://www.murraylax.org contains bootstrapping procedures for calculating confidence intervals for the median and interpolated median. These procedures can be called into R with the following code:
@@ -74,13 +76,14 @@ source("http://www.murraylax.org/code/R/medianbs.r")
 
 A confidence interval for both the median and interpolated median for the example data above can be computed with the following function call:   
 ```{r}
-median.bs(kidsdata$Grades, conf.level=0.95, bootn=50000)
+median.bs(df$Grades, conf.level=0.95, bootn=50000)
 ```
-The function calculates the median and interpolated median for the variable `kidsdata$Grades` for `bootn=50000` simulated samples and reports the 2.5 and 97.5 percentiles (the middle 95% since `conf.level=0.95`)
+The function calculates the median and interpolated median for the variable `df$Grades` for `bootn=50000` simulated samples and reports the 2.5 and 97.5 percentiles (the middle 95% since `conf.level=0.95`)
 
 Note that when you run the above procedure you may have found slightly different numbers for the ranges in the confidence interval.  This is because these estimates are based on thousands of random simulations of samples, and your computer may have generated different random samples that resulted in different estimates for the confidence intervals.  This is common for statistical procedures based on simulation methods. 
 
-## 4. Hypothesis Test on the Center of the Distribution ##
+# Hypothesis Test on the Center of the Distribution 
+
 The **Wilcoxon Signed Rank test** considers the hypothesis that the distribution is centered around a particular value.  Let us use the example data set above to illustrate the use of Wilcoxon Signed Rank test.  We found that median rank of importance that students gave to getting good grades in our sample was equal to 3, and the sample interpolated median was 2.67.  Let us test the hypothesis that in the population, the average rank for grades is less than 3.  The null and alternative hypotheses are the following:
 
 **Null hypothesis:** The population rank for grades is centered at 3.   
@@ -88,9 +91,9 @@ The **Wilcoxon Signed Rank test** considers the hypothesis that the distribution
 
 The following code calls the `wilcox.test()` function to test this hypothesis:
 ```{r}
-wilcox.test(kidsdata$Grades, alternative="less", mu=3)
+wilcox.test(df$Grades, alternative="less", mu=3)
 ```
 
-The first parameter to the function call, `kidsdata$Grades`, specifies the variable for the hypothesis test, the second parameter, `alternative="less"` specifies that this is a one-tailed test with an alternative hypothesis that the distribution is centered below the given value, and the final parameter, `mu=3`, gives the value to test which is given in the null and alternative hypothesis.    
+The first parameter to the function call, `df$Grades`, specifies the variable for the hypothesis test, the second parameter, `alternative="less"` specifies that this is a one-tailed test with an alternative hypothesis that the distribution is centered below the given value, and the final parameter, `mu=3`, gives the value to test which is given in the null and alternative hypothesis.    
 
 With a p-value is significantly below 5%, we find statistical evidence that the population of students has ranks for grade importance centered below 3.

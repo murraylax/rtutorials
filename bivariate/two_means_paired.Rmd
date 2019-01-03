@@ -1,24 +1,16 @@
 ---
 title: "Estimating Differences in Means - Paired Samples"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document:
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
 
-[PDF file location: http://www.murraylax.org/rtutorials/two_means_paired.pdf](http://www.murraylax.org/rtutorials/two_means_paired.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/two_means_paired.html](http://www.murraylax.org/rtutorials/two_means_paired.html)
-
-* * * * 
+# Introduction
 
 Here we investigate estimating differences in the means between two *paired samples*. 
 
@@ -34,26 +26,26 @@ Testing differences in *means* between paired samples is appropriate when the va
 
 **Example:** The Centers for Disease Control and Prevention (CDC) maintains data on motor vehicle fatalities by state, age, and gender.  In our example, a data set with 50 observations, one for each U.S. state, the motor vehicle occupant fatality rate per 100,000 members of the population.  The data set includes separate variables for the following age groups: 0-20, 21-34, 35-54, and 55+.  The data set also includes variables for the mortality rate for women as a whole and men as a whole.
 
-## 1. Download the Data ##
+# Download the Data 
 
-The code below downloads the file then reads it into an R data frame that we name `fatalities`.
+The code below downloads the file then reads it into an R data frame called `df`.
 
 ```{r}
-fatalities <- read.csv(url("http://murraylax.org/datasets/vehiclefatalities.csv"));
+load(url("http://murraylax.org/datasets/vehiclefatalities.RData"));
 ```
 
-## 2. Computing Means ##
+# Computing Means 
 
 The function `t.test` computes a number of statistics and statistical tests for a difference between two means, including sample estimates for the differences in the means, a confidence interval, and a hypothesis test.  In the code below, we call the function to compare the means of variables `Age21.34` and `Age.35.54`, instruct the function that these are *paired* samples, and assign all the resulting output to a new variable we call `fatalstats`.
 ```{r}
-fatalstats <- t.test(x=fatalities$Age.21.34, 
-                     y=fatalities$Age.35.54, 
+fatalstats <- t.test(x=df$Age.21.34, 
+                     y=df$Age.35.54, 
                      paired=TRUE, 
                      alternative="two.sided", 
                      conf.level=0.95)
 ```
 
-The first two parameters, `x` and `y`, into the function `t.test` are the two variables that we are comparing.  As each variable is a member of the data frame named `fatalities`, we access each one by first naming the name of the data frame, typing a dollar sign (`$`), then specifying which variable in the data frame we are referring to.  
+The first two parameters, `x` and `y`, into the function `t.test` are the two variables that we are comparing.  As each variable is a member of the data frame named `df`, we access each one by first naming the name of the data frame, typing a dollar sign (`$`), then specifying which variable in the data frame we are referring to.  
 
 The third parameter specifies that we want a two tailed test.  We do a two tailed test because our research question simply asked if there is a *difference* between the average fatality rate for the two groups, not whether a specific variable was *greater* than the other.  Consistent with the research question and the two-tailed test is the not-equal sign in the alternative hypothesis.  The last parameter `conf.level=0.95` will generate output that will be useful later for computing a 95% confidence interval. 
 
@@ -64,13 +56,13 @@ fatalstats$estimate
 
 Here we see a positive number, equal to `4.625`, which means the fatality rate for the 21-34 age group is higher than the 35-54 age group, by amount of 4.625 people per 100,000 in the population.  If we wish to compute the mean for each age group, we can use the `mean()` function for each of the variables as follows:
 ```{r}
-mean(fatalities$Age.21.34, na.rm=TRUE)
-mean(fatalities$Age.35.54, na.rm=TRUE)
+mean(df$Age.21.34, na.rm=TRUE)
+mean(df$Age.35.54, na.rm=TRUE)
 ```
 
 The parameter `na.rm=TRUE` tells the function `mean` to ignore missing values, which are coded with NA (i.e. not available).  We can see here that the mean fatality rate for the 21-34 age group is approximately 13.704 per 100,000 and the mean fatality rate for the 35-54 age group is 8.970 per 100,000.  The difference is equal to the estimate found above, 4.625.
 
-## 3. Calculate a 95% Confidence Interval ##
+# 3. Calculate a 95% Confidence Interval #
 
 The confidence interval is a range of values for the difference between the population means of the two variables, based on our samples estimates of the means and an estimate for the margin of error due to random sampling.  
 
@@ -81,7 +73,7 @@ fatalstats$conf.int
 
 The confidence interval places the mean difference between fatality rates of the 21-34 age group and the 35-54 age group in the range 3.674 and 5.576.  We can say with 95% confidence that this interval estimate includes the true difference in population means.
 
-## 4. Two-Tailed Paired Samples T-test ##
+# Two-Tailed Paired Samples T-test 
 
 Let us test the hypothesis that the vehicle fatality rate 21-34 age group is different than the vehicle fatality rate for 35-54 age group.  The null and alternative hypotheses are given as follows:
 
@@ -97,7 +89,7 @@ fatalstats
 
 We can see from above that the p-value is 1.5e-12 (i.e. $1.5 \times 10^{-12}$) which is much smaller than a significance level of 0.05 or 5\%.  We can say confidently that there is statistical evidence that the average vehicle fatality rate for the 21-34 age group is different than the 35-54 age group.
 
-## 5. One-Tailed Independent Samples T-Test ##
+# One-Tailed Independent Samples T-Test 
 
 Suppose our intuition tells us that the 21-34 age group may have a higher fatality rate than the 35-54 age group, because less experience driving and less maturity may lead to more dangerous decisions.  To test this intuition, suppose a researcher is interested in testing the following one-tailed hypotheses:
 
@@ -109,8 +101,8 @@ The *greater-than* symbol in the alternative hypothesis implies that this is a o
 The code that we ran above did conduct a hypothesis test, but we need to call the `t.test()` function again to specify that this is a one-tailed test.  
 
 ```{r}
-t.test(x=fatalities$Age.21.34, 
-       y=fatalities$Age.35.54, 
+t.test(x=df$Age.21.34, 
+       y=df$Age.35.54, 
        paired=TRUE, 
        alternative="greater", 
        conf.level=0.95)

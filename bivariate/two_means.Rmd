@@ -24,7 +24,7 @@ Our goal with this example is to estimate the difference in average hourly earni
 
 # Download the Data
 
-The code below downloads and loads into membeor the data set.
+The code below downloads and loads into memory the data set.
 
 ```{r}
 load(url("http://murraylax.org/datasets/cps04.RData"))
@@ -34,13 +34,17 @@ The data frame `df` contains a variable called `ahe`, which stands for average h
 
 # Calculate Means 
 
-The function `t.test` computes a number of statistics and statistical tests for a difference between two means, including sample estimates for each mean, a confidence interval, and a hypothesis test.  In the code below, we call the  function and assign all the resulting output to a new object we call `ahestats`.
+The function `t.test` computes a number of statistics and statistical tests for a difference between two means, including sample estimates for each mean, a confidence interval, and a hypothesis test.  In the code below, we call the function and assign all the resulting output to a new object we call `ahestats`.
 
 ```{r}
-ahestats <- t.test(ahe ~ female, data=df, conf.level=0.95)
+ahestats <- t.test(ahe ~ female, data=df, conf.level=0.95, alternative="two.sided")
 ```
 
-The first parameter, `ahe ~ female`, is a *formula* that says we are interested in the outcome variable `ahe` and how it is different for different values for the explanatory variable, `female`.  The second parameter, `data=df`, tells the function in what data frame the variables `ahe` and `female` can be found.  The last parameter, `conf.level=0.95`, will generate output that will be useful later for computing a 95% confidence interval. 
+The first parameter, `ahe ~ female`, is a *formula* that says we are interested in the outcome variable `ahe` and how it is different for different values for the explanatory variable, `female`.  The second parameter, `data=df`, tells the function in what data frame the variables `ahe` and `female` can be found.  
+
+The next parameter, `conf.level=0.95`, will generate output that will be useful later for computing a 95% confidence interval. This parameter is optional, and the default value for `conf.level` if nothing is specified is equal to 0.95. Therefore, even if this had been completely omitted, the function call would have performed identically. Still, it is useful to include this for readability, as people may not have memorized default values for optional parameters.
+
+The final parameter, `alternative="two.sided"` is also an optional parameter, and the default value is what we have assigned, "two.sided". This means `t.test()` will compute a two-tailed hypothesis test and confidence interval. Confidence intervals are almost always reported as two-sided (i.e. two-tailed). We learn more about the difference between two-tailed and one-tailed hypothesis tests in the sections below.
 
 The output of `t.test` that we assigned to the object `ahestats` is a list which includes an item called `estimate`.  The `estimate` item includes the mean of each of the groups defined by `female`.  Report this item with the following code:
 
@@ -62,7 +66,8 @@ ahestats$conf.int
 
 The confidence interval for the difference between average hourly earnings between men and women is between \$2.04 and \$2.79.  We can say with 95% confidence that this interval estimate includes the true difference in population means.
 
-# Two-Tailed Independent Samples T-Test #
+# Two-Tailed Independent Samples T-Test 
+
 An **independent samples t-test** lets us determine whether there is evidence that the mean of the first group is different than the mean of the second group in the population.  The typical two-tailed test considers the following null and alternative hypotheses:
 
 **Null hypothesis: $\mu_0-\mu_1=0$   

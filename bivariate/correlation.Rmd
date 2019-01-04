@@ -1,37 +1,38 @@
 ---
 title: "Estimating the Population Correlation"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document: 
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
 
-[PDF file location: http://www.murraylax.org/rtutorials/correlation.pdf](http://www.murraylax.org/rtutorials/correlation.pdf)
+* * * * 
 
-[HTML file location: http://www.murraylax.org/rtutorials/correlation.html](http://www.murraylax.org/rtutorials/correlation.html)
-
-* * * *
 *Note on required packages:*  The following code requires the packages in the `tidyverse`. The `tidyverse` contains many packages that allow you to organize, summarize, and plot data. If you have not already done so, download and install the libraries (needed only once per computer), and load the libraries (need to do every time you start R) with the following code:
 
-`install.packages("tidyverse") # This only needs to be executed once for your machine`  
+```{r,eval=FALSE}
+# This only needs to be executed once for your machine
+install.packages("tidyverse")
 
-`library("tidyverse") # This needs to be executed every time you load R`
+# This needs to be executed every time you load R
+library("tidyverse")
+```
 
 * * * * 
 ```{r,echo=FALSE, include=FALSE}
 library("tidyverse")
 ```
 
+# Introduction
+
 A **correlation** exists between two variables when one is related to the other such that there is **co-movement**.  **Positive co-movement** means as one variable increases, the other variable also increases.  **Negative co-movement** means as one variable increases, the other variable decreases.  
 
-## 1. Download the Data ##
+# Download the Data 
+
 Stock and Watson's *Introduction to Econometrics* textbook includes a data set with economic growth and education data for 65 countries from 1960-1995.  A subset of that data set is available to download from `http://murraylax.org/datasets/growth.RData`
 
 The code below downloads the data file assigns the data set to an object we create and call `growthdata`.
@@ -42,22 +43,21 @@ load(url("http://murraylax.org/datasets/growth.RData"))
 
 We will focus on the average annual growth rate of real GDP from 1960-1995 (labeled `growth`) and the average number of years of schooling for adult residents in the country in 1960 (labeled `yearsschool`).
 
-## 2. Plot the data ##
+# Plot the data 
 
 Let us first create a scatter plot that illustrates the relationship between average years of schooling of adult residents and the subsequent average growth rate over the next 35 years.  We can create a scatter plot using the `ggplot()` function as follows:
 
 ```{r}
 growthplot <- ggplot(growthdata, aes(x=yearsschool, y=growth)) + 
   geom_point() +
-  xlab("Years Schooling") +
-  ylab("Growth Rate %")
+  labs(x="Years Schooling", y="Growth Rate %")
 ```
 
 The first line of the `ggplot()` function call sets the data and aesthetic layers of the plot. The first parameter `growthdata` tells ggplot where to find the data. The second parameter, `aes(x=yearsschool, y=growth)` maps the variable `yearsschool` to the x-axis and the variable `growth` to the y-axis.  
 
 The next line adds the geometry layer. In this case, `geom_point()` creates a point for each pair of observations.
 
-The last two lines set the labels for the x-axis and y-axis.
+The last line uses the `labs()` function to set the labels for the x and y aesthetics.
 
 We save the output to an object we call `growthplot`. We can view the plot by entering the name of this object at the R console:
 ```{r}
@@ -89,7 +89,7 @@ growthplot + geom_smooth(method="lm")
 
 We can see from this graph that an upward sloping line describes well the relationship between years of schooling of adults in 1960 and the subsequent 35 year average growth rate of real GDP.  That is, our variables seem to display a *positive, linear co-movement*.
 
-## 3. Estimating the Pearson correlation coefficient ##
+# Estimating the Pearson correlation coefficient 
 
 The **Pearson correlation coefficient** is a measure of the strength of a **linear** co-movement between two interval or ratio variables.  **Linear co-movement** implies that either an upward sloping or downward sloping **straight line** best describes the relationship.
 
@@ -103,7 +103,7 @@ cor(x=growthdata$yearsschool, y=growthdata$growth, method='pearson')
 
 We see from our result that the sample estimate for the Pearson correlation coefficient is 0.33.  Since this number is positive, the two variables are positively correlated.
 
-## 4. Hypothesis testing and confidence intervals for the Pearson correlation coefficient ##
+# Hypothesis testing and confidence intervals for the Pearson correlation coefficient #
 
 Our sample estimate for the correlation coefficient is positive, but is this enough evidence that there is a relationship between years of schooling and real GDP growth in the population?  To answer this, let us conduct a hypothesis test with the following null and alternative hypotheses:
 
@@ -127,7 +127,7 @@ The p-value for the hypothesis test is 0.007, which is far below a common signif
 
 The 95% confidence interval is also included in the output to `cor.test`.  The results reveal an interval estimate for the population Pearson correlation coefficient between 0.095 and 0.53.  With 95% confidence, this interval contains the true population Pearson correlation coefficient.  This range includes all positive numbers, but ranges from somewhat weak but positive correlation to strong positive correlation.
 
-## 5. Spearman Correlation Coefficient ##
+# Spearman Correlation Coefficient 
 
 The **Spearman correlation coefficient** is a non-parametric measure of the relationship between two variables, which measures the strength of the relationship between the **ranks** of observations in the two variables.  Because the calculation relies only on ranks, the method is appropriate for ordinal data as well as interval or ratio data.
 
@@ -138,12 +138,12 @@ We can create a  scatter plot that illustrates the relationship **in the ranks**
 ```{r}
 ggplot(growthdata, aes(x=rank(yearsschool), y=rank(growth))) + 
   geom_point() +
-  xlab("Years Schooling (Ranks)") +
-  ylab("Growth Rate (Ranks)") +
+  labs(x = "Years Schooling (Ranks)", y="Growth Rate (Ranks)") +
   geom_smooth(method="lm")
 ```
 
 The Spearman correlation coefficient estimates the strength of the linear relationship between the ranks.  It is exactly the same as the Pearson correlation coefficient, expect applied to the ranks of the data.  We can compute the estimate with either of the following methods:
+
 ```{r}
 cor(x=growthdata$yearsschool, y=growthdata$growth, method='spearman')
 cor(x=rank(growthdata$yearsschool), y=rank(growthdata$growth), method='pearson')

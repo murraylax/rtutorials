@@ -1,22 +1,14 @@
 ---
 title: "Introduction to Multiple Regression"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document:
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
-
-[PDF file location: http://www.murraylax.org/rtutorials/multregression_intro.pdf](http://www.murraylax.org/rtutorials/multregression_intro.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/multregression_intro.html](http://www.murraylax.org/rtutorials/multregression_intro.html)
 
 * * * * 
 
@@ -24,7 +16,7 @@ urlcolor: blue
 
 The procedure is used to determine how one or more explanatory variables influence an outcome variable, *while holding all other explanatory variables fixed*.
 
-## 1. Example: Monthly Earnings and Years of Education ##
+# Example: Monthly Earnings and Years of Education 
 
 The code below downloads a CSV file that includes data from 1980 for 935 individuals on variables including their total monthly earnings (`MonthlyEarnings`) and a number of variables that could influence income, including each person's IQ (`IQ`), a measure of knowledge of their job (`Knowledge`), years of education (`YearsEdu`), years experience (`YearsExperience`), and years at current job (`Tenure`). The data set originally comes from textbook website for Stock and Watson's *Introduction to Econometrics*.
 
@@ -52,7 +44,7 @@ The results indicate the best fitting line is given by,
 
 $$ \hat{y}_i = -531.0 + 3.7 x_{IQ,i} + 8.3 x_{Knowledge,i} + 47.3 x_{Edu,i} + 11.9 x_{Exp,i} + 6.2 x_{Tenure,i}. $$
 
-## 2. Omitted Variable Bias ##
+# Omitted Variable Bias 
 
 A multiple regression is even useful when one is only interested in the impact of *one* of the explanatory variables.  The reason is that the regression analysis *holds constant* the effects of the other variables.
 

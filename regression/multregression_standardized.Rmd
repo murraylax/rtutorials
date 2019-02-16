@@ -1,0 +1,168 @@
+---
+title: "Standardized Regression Coefficients"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
+author: 
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
+---
+
+**Note on required packages:**  The following code requires the package `tidyverse`, which actually contains many packages that allow you to organize, summarize, and plot data. If you have not already done so, download, install, and load the library with the following code:
+
+```{r,echo=TRUE, eval=FALSE}
+# This only needs to be executed once for your machine
+install.packages("tidyverse")
+
+# This needs to be executed every time you load R
+library("tidyverse") 
+```
+
+```{r, echo=FALSE, include=FALSE}
+library("tidyverse")
+```
+
+* * * * 
+
+# Example: Monthly earnings and years of education 
+
+In this tutorial, we will focus on an example that explores the relationship between total monthly earnings (`MonthlyEarnings`) and a number of factors that may influence monthly earnings including including each person's IQ (`IQ`), a measure of knowledge of their job (`Knowledge`), years of education (`YearsEdu`), years experience (`YearsExperience`), and years at current job (`Tenure`).
+
+The code below downloads a CSV file that includes data on the above variables from 1980 for 935 individuals, and assigns it to a data frame that we name `wages`.
+
+```{r}
+wages <- read.csv(url("https://murraylax.org/datasets/wage2.csv"))
+```
+
+ We will estimate the following multiple regression equation using the above five explanatory variables:
+
+$$ y_i = b_0 + b_1 x_{1,i} + b_2 x_{2,i} + ... + b_k x_{k,i} + e_i, $$
+
+where $y_i$ denotes the *income* of individual $i$, each $x_{j,i}$ denotes the value of explanatory variable $j$ for individual $i$, and $k=5$ is the number of explanatory variables. 
+
+We can use the `lm()` function to estimate the regression as shown in the R code below.  We follow this with a call the `summary()` function to display the multiple regression results to the screen.
+
+```{r}
+lmwages <- lm(MonthlyEarnings ~ IQ + Knowledge + YearsEdu + YearsExperience + Tenure,
+              data=wages)
+summary(lmwages)
+```
+
+# Comparing the magnitude of regression coefficients
+
+Let's suppose we want to compare the explanatory variables to each other in terms of how much they each impact the outcome variable, monthly earnings.
+
+## Variables have same sacle and have comparable magnitudes
+
+If the explanatory variables that you wish to compare are measured on the same scale, and it makes intuitive sense to compare the magnitudes *of the variables* to each other, this can be as straight forward as comparing magnitude of the regression coefficients.
+
+For example, suppose we wanted to determine which of the following has a bigger impact on monthly earnings: an additional year of experience in your field (i.e. the `YearsExperience` variable) or an additional year of experience with your current employer (i.e. the `Tenure` variable).  Each of these variables are measured in years and it does make sense to compare these two.
+
+The coefficient on `YearsExperience` is $11.86$, and the coefficient on `Tenure` is $6.25$.  The return to an additional year of experience in your career, while holding constant `Tenure`, is estimated to be \$11.86 in additional monthly earnings.  The return to an additional year of experience at your current employer ,while holding constant total experience, `YearsExperience`, is \$6.25 in additional monthly earnings.  The additional year of career experience has a larger impact on monthly earnings.
+
+Generally, this method is *not* appropriate.  In particular, comparing the  magnitudes of coefficients is irrelevant if one of the following are true:
+
+1. The variables are measured on the same scale, but it does not make intuitive sense to compare the magnitudes.
+
+2. The variables are not measured on the same scale.
+
+## Problems comparing variables on the same scale 
+
+For the first case, suppose one wanted to compare the relative importance of education and experience in determining monthly earnings.  Both are measured in years, so the scale of measurement is identical.  However, one additional year of education and one additional year of experience are very different things.  
+
+Let us look at some summary statistics for educational attainment:
+```{r}
+table(wages$YearsEdu)
+summary(wages$YearsEdu)
+sd(wages$YearsEdu)
+```
+
+The call to `table()` provides a frequency distribution for years of education.  The first row shows the values for `YearsEdu` in the sample and the second row reports how many observations there are at each level.  We see that most of the individuals in our sample have education levels between 12 years (high school graduate) and 16 years (college graduate).
+
+The call to `summary()` shows some summary statistics for `YearsEdu`.  We can see that the median is 12 years of education, the mean is slightly higher at 13.5 years of education. Finally, the call to `sd()` shows the standard deviation is small at 2.2 years. 
+
+Given the median level of education equal to 12 years and the small standard deviation of 2.2 years, from these statistics we can see that a single additional year of education represents an economically meaningful increase in education.
+
+Let us also look at some summary statistics for years experience:
+
+```{r}
+table(wages$YearsExperience)
+summary(wages$YearsExperience)
+sd(wages$YearsExperience)
+```
+
+Compared to years of education, there is a much larger range for years of experience, ranging from 1 to 23.  The standard deviation is approximately twice as large, equal to 4.4.  A single additional year of work experience does not represent as significant a step up in the distribution as does another year of education.
+
+The solution is to **standardize the variables**, which scales them so that changes in magnitude are directly comparable.  Standardizing a variable means to convert the observations from the raw data to z-scores.  Instead of measuring each person's education and experience in years, measure each variable as the number of standard deviations above or below the mean.  
+
+The `scale()` function can be used to scale variables in any arbitrary way, but the default is to standardize them.  The mean is subtracted from every observation, and the variable is scaled by the inverse of the standard deviation.  That is, the scaled variable is equal to the z-score,
+ 
+$$ z = \frac{x - \bar{x}}{s} $$
+
+Consider the regression below with standardized values for `YearsExperience` and `YearsEdu`.  Notice the calls to `scale()` in the regression formula.
+
+```{r}
+lmwages <- lm(MonthlyEarnings ~ IQ + Knowledge + scale(YearsEdu) + scale(YearsExperience) + Tenure,
+              data=wages)
+summary(lmwages)
+```
+
+The output shows that a one standard deviation increase in years of education (which happens to be an additional 2.2 years) leads to a return of \$103.84 of additional monthly earnings.  A one standard deviation increase in years of experience (which happens to be 4.4 years) leads to a return of \$51.88.  We can see that increasing education has approximately twice the impact on monthly earnings as increasing experience.
+
+Compare these coefficients to the non-scaled regression from Section 1 above.  The non-scaled regression coefficients were equal to 47.27 and 11.86 for years of education and years of experience, respectively.  Failing to standardize the explanatory variables would lead to an *incorrect conclusion* that education is approximately *four times* more valuable than experience.
+
+Compare the remaining coefficients.  You can see that all other coefficients, standard errors, and all p-values are identical.  Linearly scaling a variable in the regression model does not change the results for other variables.
+
+
+## Problems comparing variables on different scales 
+
+Suppose we wanted to compare how education versus workplace knowledge affects monthly earnings.  Education is measured in years, and knowledge is a workplace intelligence test score.  These scales are not comparable.
+
+Still, we can standardize each variable.  Consider the following regression:
+```{r}
+lmwages <- lm(MonthlyEarnings ~ IQ + scale(Knowledge) + scale(YearsEdu) + YearsExperience + Tenure,
+              data=wages)
+summary(lmwages)
+```
+
+The regression output reveals that a one standard deviation increase in knowledge of work leads to an increase in monthly earnings equal to \$63.18.  A one standard deviation increase in education leads to an increase in monthly earnings equal to \$103.84.  We can conclude that education is relatively more valuable than knowledge of work in terms of increasing monthly earnings.
+
+# Standardized regression 
+
+A **standardized regression** is one in which all variables are standardized.  In the call to `lm()` that follows, all explanatory variables and the outcome variable are standardized:
+
+```{r}
+lmwages <- lm(scale(MonthlyEarnings) ~ 
+                scale(IQ) + scale(Knowledge) + scale(YearsEdu) +
+                scale(YearsExperience) + scale(Tenure),
+              data=wages)
+summary(lmwages)
+```
+
+Any pair of coefficients can now be compared to each other to determine which has a relatively larger impact on the outcome variable.  Because all variables are standardized, the interpretation for a coefficient is the increase in number of standard deviation of monthly earnings from a one standard deviation increase in the explanatory variables.
+
+Some examples: 
+
+-  A one standard deviation increase education leads to a 0.257 standard deviation increase in monthly earnings.  
+-  A one standard deviation increase in workplace knowledge leads to a 0.156 standard deviation increase in monthly earnings.
+-  A one standard deviation increase in experience leads to a 0.128 standard deviation increase in monthly earnings.
+
+Sometimes it is more useful to interpret coefficients when the outcome variable is not scaled.  Consider the following regression where the explanatory variables are scaled but the outcome variable is not:
+
+```{r}
+lmwages <- lm(MonthlyEarnings 
+              ~ scale(IQ) + scale(Knowledge) + scale(YearsEdu) 
+              + scale(YearsExperience) + scale(Tenure),
+              data=wages)
+summary(lmwages)
+```
+
+The coefficients now have the interpretation as the increase in monthly earnings (measured in dollars) from a one-standard deviation increase in the explanatory variables.  
+
+Some examples:
+
+* A one standard deviation increase education leads to a \$103.84 increase in monthly earnings.
+* A one standard deviation increase in workplace knowledge leads to a \$63.18 increase in monthly earnings.
+* A one standard deviation increase in experience leads to a \$51.88 increase in monthly earnings.

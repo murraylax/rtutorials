@@ -1,0 +1,176 @@
+---
+title: "Tests of Linear Restrictions"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
+author: 
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
+---
+
+* * * * 
+
+# Linear Restricted in Regression Models 
+
+In this tutorial, we consider tests on general linear restrictions on regression coefficients.
+
+In other tutorials, we examine some specific tests of linear restrictions, including:
+
+1.  F-test for regression fit:  A joint f-test on regression coefficients for all the explanatory variables.  The hypotheses are:
+  $$ H_0: \beta_1 = 0;~ \beta_2=0;~ \beta_3=0; ....; \beta_k=0 $$
+  $$ H_A: \mbox{At least one } \beta_j \neq 0 $$
+  This is a test with $k$ linear restrictions, all of which are *exclusion* restrictions. The p-value for the F-test for regression fit, which is included in the regression summary, speaks to this hypothesis test.   
+
+  
+2.  F-test for a subset of regression coefficients:  A joint f-test on exclusion restrictions for a *subset* of regression coefficients.  For example, suppose we jointly consider variables $x_2$ and $x_3$.  The hypotheses are:
+  $$ H_0: \beta_2 = 0;~ \beta_3=0 $$
+  $$ H_A: \mbox{At least one of } \beta_2 \neq 0 \mbox{ and/or } \beta_3 \neq 0 $$
+
+
+
+For both of the above tests, the null hypothesis restricts the regression model and the alternative hypothesis is the general unrestricted regression.  Both of these tests involve two regressions where one is a restricted test is *nested* in the unrestricted test.  Whenever one has nested regression models and wishes to compare the explanatory power of the unrestricted model versus the restricted model, the following F-test applies:
+
+$$ F = \frac{(SSR_r - SSR_u) / q}{SSR_u / (n-k-1)} $$
+
+where $q$ is equal to the number of restrictions, $SSR_r$ is the residual sum of squares from the restricted regression model, $SSR_u$ is the residual sum of squares from the unrestricted model, $n$ is the sample size, and $k$ is the number of explanatory variables in the unrestricted model.
+
+# General Linear Restrictions 
+
+## Example: Regression coefficients equal to each other 
+
+Suppose we have a regression model with two explanatory variables and we want to test the hypothesis whether the two regression coefficients are equal to each other or not:
+
+$$ H_0: \beta_1 = \beta_2 $$
+$$ H_1: \beta_1 \neq \beta_2 $$
+
+The unrestricted regression model takes the form:
+
+$$ y_i = \beta_0 + \beta_1 x_{1,i} + \beta_2 x_{2,i} + \epsilon_i $$
+
+It can be estimated in R with a call to `lm()` of the form:
+
+```{r, eval=FALSE}
+unres_lm <- lm(y ~ x1 + x2)
+```
+
+The restricted model takes the form,
+
+$$ y_i = \beta_0 + \beta_1 x_{1,i} + \beta_1 x_{2,i} + \epsilon_i $$
+
+where we substituted $\beta_1$ in for $\beta_2$.  We combine the terms with like coefficients:
+
+$$ y_i = \beta_0 + \beta_1 ( x_{1,1} + x_{2,i} ) + \epsilon_i $$
+
+This restricted regression can be estimated with a call to `lm()` of the form:
+
+```{r, eval=FALSE}
+res_lm <- lm(y ~ I(x1 + x2))
+```
+
+where the call to the function `I()` tells `lm()` to treat the sum $x1+x2$ as a single variable, thereby forcing a single, identical, coefficient on each of $x1$ and $x2$.  
+
+## Example: Coefficients proportional to one another 
+
+Suppose again we have a regression model with two explanatory variables, but we are interested in whether one coefficient is *twice* the magnitude of another coefficient.  The null and alternative hypotheses are:
+
+$$ H_0: \beta_1 = 2 \beta_2 $$
+$$ H_1: \beta_1 \neq 2 \beta_2 $$
+
+The unrestricted regression takes the same form as the example above.  The restricted regression can be written in the form,
+
+$$ y_i = \beta_0 + 2 \beta_2 x_{1,i} + \beta_2 x_{2,i} + \epsilon_i $$
+
+where $2 \beta_2$ was substituted in place of $\beta_1$.  The restricted regression can be estimated with a call to `lm()` of the form,
+
+```{r, eval=FALSE}
+res_lm <- lm(y ~ I(2*x1 + x2))
+```
+
+where again the call to `I()` is used to combine variables $x_1$ and $x_2$ to a single variable that is consistent with our restriction.
+
+## F-test for linear restrictions 
+
+The F-test will determine whether the unrestricted regression has significantly more explanatory power than the restricted regression.  If so, the test will be statistically significant, and the conclusion will be that the restrictions do not hold as described in the null hypothesis.  The following call to `anova()` generally compares two nested regression models and performs the f-test:
+
+```{r, eval=FALSE}
+anova(unres_lm, res_lm)
+```
+
+
+# Example: Monthly Earnings and Years of Education 
+
+Let us examine a data set that explores the relationship between total monthly earnings (`MonthlyEarnings`) and a number of factors that may influence monthly earnings including including each person's IQ (`IQ`), a measure of knowledge of their job (`Knowledge`), years of education (`YearsEdu`), years experience (`YearsExperience`), years at current job (`Tenure`), mother's education (`MomEdu`), and father's education (`DadEdu`).
+
+The code below downloads the data on the above variables from 1980 for 663 individuals and assigns it to a dataframe called `df`.  
+
+```{r}
+load(url("http://murraylax.org/datasets/wage2.RData"))
+```
+
+The following call to `lm()` estimates an unrestricted multiple regression predicting monthly earnings based on the seven explanatory variables given above.
+
+```{r}
+lm_unres <- lm(MonthlyEarnings ~
+              IQ + Knowledge + YearsEdu + YearsExperience + Tenure + 
+              MomEdu + DadEdu,
+              data=df)
+```
+
+## Regression coefficients equal to each other 
+
+Let us test the hypothesis that a mother's number of years of education has the same influence on monthly earnings as a father's number of years of education.  The null and alternative hypotheses are:
+
+$$ H_0: \beta_{MomEdu} = \beta_{DadEdu} $$
+$$ H_1: \beta_{MomEdu} \neq \beta_{DadEdu} $$
+
+The restricted regression is estimated with the following call to `lm()`:
+
+```{r}
+lm_res <- lm(MonthlyEarnings ~
+              IQ + Knowledge + YearsEdu + YearsExperience + Tenure + 
+              I( MomEdu + DadEdu ),
+              data=df)
+```
+
+We compare the relative explanatory power of the restricted and unrestricted regressions with the following call to `anova()`,
+
+```{r}
+anova(lm_unres, lm_res)
+```
+
+The p-value to the F-test is $0.5762$.  This far exceeds a significance level of $0.05$, so we fail to reject the null hypothesis.  We fail to find statistical evidence that the coefficients for mothers' education is different from fathers' education.
+
+## Regression coefficients proportional to each other 
+
+Let us examine the unrestricted coefficient estimates:
+
+```{r}
+summary(lm_unres)
+```
+
+The return to monthly income from an additional year of education is \$39.14.  This appears to be *more than double* the effect of experience (\$14.52) and tenure (\$3.50) combined.  Let us see if there is statistical evidence for such a claim.  The f-test is only a two-sided test, so we test the hypotheses:
+
+
+$$ H_0: \beta_{YearsEdu} = 2( \beta_{YearsExperience} + \beta_{YearsTenure} ) $$
+$$ H_1: \beta_{YearsEdu} \neq 2( \beta_{YearsExperience} + \beta_{YearsTenure} ) $$
+
+Substituting the restrictions in the null hypothesis into the model, and combining like coefficients, yields a linear model of the form,
+
+```{r}
+lm_res <- lm(MonthlyEarnings ~
+              IQ + Knowledge +
+              I(YearsExperience + 2*YearsEdu ) +
+              I(Tenure + 2*YearsEdu ) +
+              MomEdu + DadEdu,
+             data=df)
+```
+
+Finally we call `anova()` to compare the restricted and unrestricted model.
+
+```{r}
+anova(lm_res, lm_unres)
+```
+
+The p-value is equal to $0.7586$.  We fail to reject the null hypothesis, so we fail to find statistical evidence that the return to education on monthly earnings is different than twice the combined impact from experience and tenure.

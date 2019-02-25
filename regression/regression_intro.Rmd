@@ -1,36 +1,34 @@
 ---
 title: "Bivariate Linear Regression"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document:
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
 
-[PDF file location: http://www.murraylax.org/rtutorials/regression_intro.pdf](http://www.murraylax.org/rtutorials/regression_intro.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/regression_intro.html](http://www.murraylax.org/rtutorials/regression_intro.html)
-
 * * * * 
+
 *Note on required packages:*  The following code requires the packages in the `tidyverse`. The `tidyverse` contains many packages that allow you to organize, summarize, and plot data. If you have not already done so, download and install the libraries (needed only once per computer), and load the libraries (need to do every time you start R) with the following code:
 
-`install.packages("tidyverse") # This only needs to be executed once for your machine`  
+```{r,eval=FALSE}
+# This only needs to be executed once for your machine
+install.packages("tidyverse")
 
-`library("tidyverse") # This needs to be executed every time you load R`
+# This needs to be executed every time you load R
+library("tidyverse")
+```
 
 * * * * 
 ```{r,echo=FALSE, include=FALSE}
 library("tidyverse")
 ```
 
-## 1. Regression Equation ##
+
+# Regression Equation 
 
 A **simple linear regression** (also known as a **bivariate regression**) is a linear equation describing the relationship between an **explanatory variable** and an **outcome variable**, specifically with the assumption that the explanatory variable influences the outcome variable, and not vice-versa.
 
@@ -72,7 +70,7 @@ $$ y_i = \beta_0 + \beta_1 x_i + \epsilon_i, $$
 
 where $b_0$ above is a sample estimate of the population coefficient $\beta_0$ and $b_1$ above is a sample estimate of the population coefficient $\beta_1$.
 
-## 2. Download and Visualize the Data ##
+# Download and Visualize the Data 
 
 The code below downloads a CSV file that includes data from 1980 for 935 individuals on variables including their total monthly earnings (`MonthlyEarnings`) and a number of variables that could influence income, including years of education (`YearsEdu`).  The data set originally comes from textbook website for Stock and Watson's *Introduction to Econometrics*.
 
@@ -86,12 +84,13 @@ ggplot(data=wages, mapping=aes(x=YearsEdu, y=MonthlyEarnings)) +
   geom_point() +
   labs(title="Monthly Earnings Versus Years of Education",
        x="Years of Education",
-       y="Monthly Earnings") 
+       y="Monthly Earnings") +
+  theme_bw()
 ```
 
-In the first line above, we call the `ggplot()` function and set the data and aesthetic layers of the graph. We define the data layer by seeting the parameter `data` equal to the `wages` data frame. We define the aesthetics layer with the mapping parameter.  We create a mapping with a call to the `aes()` function and map `YearsEdu` to the x-axis and `MonthlyEarnings` to the y-axis.  
+In the first line above, we call the `ggplot()` function and set the data and aesthetic layers of the graph. We define the data layer by setting the parameter `data` equal to the `wages` data frame. We define the aesthetics layer with the mapping parameter.  We create a mapping with a call to the `aes()` function and map `YearsEdu` to the x-axis and `MonthlyEarnings` to the y-axis.  
 
-We add the geometery layer in the second line with a call to `geom_point()`. This creates a plot with points on it.
+We add the geometry layer in the second line with a call to `geom_point()`. This creates a plot with points on it.
 
 Finally, we add descriptive labels to the x and y axes and the title with the `labs()` function.
 
@@ -106,10 +105,11 @@ ggplot(data=wages, mapping=aes(x=YearsEdu, y=MonthlyEarnings)) +
   geom_point(position="jitter") +
   labs(title="Monthly Earnings Versus Years of Education",
        x="Years of Education",
-       y="Monthly Earnings") 
+       y="Monthly Earnings") +
+  theme_bw()
 ```
 
-## 3. Estimating the Regression Equation ##
+# Estimating the Regression Equation 
 
 We estimate the regression line with the R function `lm()`, which stands for *linear model*.  We estimate the regression line in the code that follows and assign the output to a object we call `edulm`.
 
@@ -137,7 +137,8 @@ ggplot(data=wages, mapping=aes(x=YearsEdu, y=MonthlyEarnings)) +
   labs(title="Monthly Earnings Versus Years of Education",
        x="Years of Education",
        y="Monthly Earnings") +
-  geom_smooth(method="lm")
+  geom_smooth(method="lm") +
+  theme_bw()
 ```
 
 In the `geom_smooth()` function call, we set the parameter `method="lm"` to create a linear regression line. The shaded area surrounding the line represents a 95\% confidence interval for the estimated regression line.

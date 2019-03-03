@@ -4,7 +4,7 @@ confintHC <- function(lmobject, type="HC3", conf.level=0.95, omega=NULL) {
   cf <- lmobject$coefficients
   tcrit <- qt(p=p, df=lmobject$df.residual)
   if(is.null(omega)) {
-    omega=vcovHC(lmwages, type=type)
+    omega=vcovHC(lmobject, type=type)
   }
   stderr_coef <- tcrit * sqrt(diag(omega))
   

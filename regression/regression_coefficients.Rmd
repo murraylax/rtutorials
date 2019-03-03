@@ -1,26 +1,18 @@
 ---
 title: "Inferences on Regression Coefficients"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document:
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
-
-[PDF file location: http://www.murraylax.org/rtutorials/regression_coefficients.pdf](http://www.murraylax.org/rtutorials/regression_coefficients.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/regression_coefficients.html](http://www.murraylax.org/rtutorials/regression_coefficients.html)
 
 * * * * 
 
-## 1. Example: Monthly Earnings and Years of Education ##
+# Example: Monthly Earnings and Years of Education 
 
 In this tutorial, we will focus on an example that explores the relationship between total monthly earnings and years of education.  We will estimate the following regression equation:
 
@@ -48,7 +40,7 @@ summary(lmwages)
 These 'Estimate' column of the coefficients table implies the equation for the best fitting line is given by,
 $$\hat{y}_i = 146.95 + 60.21 x_i.$$
 
-## 2. Hypothesis Testing on Coefficients (Two-tailed) ##
+# Hypothesis Testing on Coefficients (Two-tailed) 
 
 The regression coefficient on years of education, $b_1=60.21$, implies that in our sample each additional year of education is associated with \$60.21 higher monthly earnings.  Suppose we wanted to test the hypothesis that having more years of education is associated with a change in monthly earnings.   The null and alternative hypotheses would be as follows:
 
@@ -61,7 +53,7 @@ The alternative hypothesis says that in the population the slope is different th
 
 Results from this hypothesis test are reported in the summary above.  The p-values *for a two-tailed test* are in the column labeled, `Pr(>|t|)`.  In our case, the p-value on `YearsEdu` is equal to $2.2~\times~10^{-16}$.  Since this is far below a significance level equal to 5\%, we reject the null hypothesis and conclude having more years of education is associated with a difference in monthly earnings.
 
-## 2. Hypothesis Testing on Coefficients (One-tailed) ##
+# Hypothesis Testing on Coefficients (One-tailed) 
 
 Suppose instead we have reason to believe that more education should result in higher average income, so we want to test the hypothesis that having *more education* is associated with *higher monthly earnings*.  For this, we will conduct the following one-tailed hypothesis test on the coefficient:
 
@@ -76,7 +68,7 @@ We can use the same output from above.  If the estimated coefficient is indeed p
 
 Our p-value is therefore equal to $1.1~\times~10^{-16}$, which is far below the 5\% significance level, so we reject the null hypothesis and conclude having more years of education is associated with higher average monthly earnings.
 
-## 3. Confidence Interval Inference on Coefficients ##
+# Confidence Interval Inference on Coefficients 
 
 Our sample evidence suggests that a single additional year of education is associated with an additional \$60.21$ in monthly earnings.  A 95\% confidence interval can give us an interval estimate for our belief of the size of this impact, based on an estimate for the margin of error due to random sampling.  We can compute a 95\% confidence interval with the following call to `confint()`:
 ```{r}

@@ -1,11 +1,18 @@
 ---
 title: "Nonlinearities in Simple Regression"
-output: pdf_document
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
+author: 
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
 
 * * * *
 
-## 1. Example: Monthly Earnings and Years of Education ##
+# Example: Monthly Earnings and Years of Education 
 
 In this tutorial, we will focus on an example that explores the relationship between total monthly earnings and years of education.  
 
@@ -20,7 +27,7 @@ We estimate the simple regression with the following call to `lm()` and store th
 lmwages <- lm(wages$MonthlyEarnings ~ wages$YearsEdu)
 ```
 
-## 2. Log Function ##
+# Log Function 
 
 It may not be appropriate that there is a *linear* relationship between years of education and monthly earnings.  With a linear relationship, we assume that each year of education results in the same dollar increase in monthly earnings.  
 
@@ -30,9 +37,9 @@ $$ ln(y_i) = b_0 + b_1 x_i + e_i  $$
 
 where $y_i$ denotes the *income* of individual $i$, $ln(y_i)$ is the natural logarithm of $y_i$, and $x_i$ denotes the number of *years of education* of individual $i$.
 
-When we have a relationship of the form $ln(y) = b_0 + b_1 x$, this can be transformed to the exponential function, $y = \exp{b_0 + b_1 x}$. To get an idea what this function looks like, we can make up some numbers for $b_0$ and $b_1$ and plot the function.
+When we have a relationship of the form $ln(y) = b_0 + b_1 x$, this can be transformed to the exponential function, $y = \exp{(b_0 + b_1 x)}$. To get an idea what this function looks like, we can make up some numbers for $b_0$ and $b_1$ and plot the function.
 
-In the line of code below we create a function called `expfun` and set it equal to the function, $f(x) = \exp{2 + 5x}$.
+In the line of code below we create a function called `expfun` and set it equal to the function, $f(x) = \exp{(2 + 5x)}$.
 ```{r}
 expfun <- function(x) exp(2 + 5*x)
 ```
@@ -53,7 +60,7 @@ plot(expfun)
 
 Here we see this means that the outcome variable, $y$, decreases as $x$ increases, and at a *decreasing* rate. 
 
-## 3. Regression with a log dependent variable ##
+# Regression with a log dependent variable 
 
 We estimate the regression equation with the log of monthly earnings as the outcome variable with the following call to `lm()` that assigns the output to an object that we call `loglmwages`:
 ```{r}
@@ -75,23 +82,23 @@ $$ \frac{\Delta ln(\hat{y})}{\Delta x} \approx \frac{\% \Delta \hat{y}}{\Delta x
 
 Therefore, our regression predicts that a one additional year of education is associated with approximately a 6\% higher monthly salary.
 
-## 4. Log-Log Relationship ##
+# Log-Log Relationship 
 
 Let us instead consider the possibility for the following non-linear relationship between monthly earnings and educational attainment:
 
 $$ ln(y_i) = b_0 + b_1 ln(x_i) + \epsilon_i $$
 
-Let us make up some numbers for $b_0$ and $b_1$ to visualize what such a function looks like.  First let us solve for $y_i$ by taking the exponential function of both sides of the equation.  This yields the equivalent function:
+First let us solve for $y_i$ by taking the exponential function of both sides of the equation.  This yields the equivalent function:
 
-$$ y_i = \exp{b_0 + b_1 ln(x_i) + \epsilon_i} $$
+$$ y_i = \exp{(b_0 + b_1 ln(x_i) + \epsilon_i)} $$
 
-In the code below, we make up a function with $b_0=2$ and $b_1=5$, call it `loglogfun` and plot the curve to see what it looks like:
+Let us make up some numbers for $b_0$ and $b_1$ to visualize what such a function looks like. In the code below, we make up a function with $b_0=2$ and $b_1=5$, call it `loglogfun` and plot the curve to see what it looks like:
 ```{r}
 loglogfun <- function(x) exp(2 + 5*log(x))
 plot(loglogfun)
 ```
 
-The function also predicts that $y$ increases at an increasing rate with $x$, but an examination of the magnitude of the $y$ axis labels reveals rate of increase in smaller.
+The function also predicts that $y$ increases at an increasing rate with $x$, but an examination of the magnitude of the $y$ axis labels reveals rate of increase is smaller that when we had only a log for the dependent variable.
 
 We can estimate a log-log regression of monthly earnings on educational attainment with the following call to `lm()`, where the output is assigned to an object we call `lglglmwages`:
 ```{r}
@@ -107,7 +114,7 @@ The coefficient $b_1 = 0.8269$ is a measure of how much the *natural log* of ear
 
 $$ b_1 = \frac{\Delta ln(\hat{y})}{\Delta ln(x)} = 0.8269 $$
 
-It turns out that this is approximately equal to the predicted *percentage* increase in $y$ when $x$ increases by *one percent*.  Mathematically,
+It turns out that this is equal to the predicted *percentage* increase in $y$ when $x$ increases by *one percent*.  Mathematically,
 
 $$ b_1 = \frac{\Delta ln(\hat{y})}{\Delta ln(x)} = \frac{\% \Delta \hat{y}} {\% \Delta x} = 0.8269$$
 

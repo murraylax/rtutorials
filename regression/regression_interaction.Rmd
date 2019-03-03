@@ -1,0 +1,93 @@
+---
+title: "Interaction Effects"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
+author: 
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
+---
+
+* * * * 
+
+In this tutorial, we expand our linear regression framework to include **interaction effects**.  An interaction effect is when the *combination* of two variables has a *different effect* on the outcome variable than just the sum of the impact from each variable in isolation.
+
+We will illustrate the meaning and use of interaction effects with an example
+
+# Example: Factors Affecting Monthly Earnings 
+
+Let us examine a data set that explores the relationship between total monthly earnings (`MonthlyEarnings`) and a number of factors that may influence monthly earnings including including each person's IQ (`IQ`), a measure of knowledge of their job (`Knowledge`), years of education (`YearsEdu`), years experience (`YearsExperience`), and years at current job (`Tenure`).
+
+The code below downloads data on the above variables from 1980 for 663 individuals and assigns it to a dataframe called `df`.  
+
+```{r}
+load(url("http://murraylax.org/datasets/wage2.RData"))
+```
+
+The following call to `lm()` estimates a multiple regression predicting monthly earnings based on the five explanatory variables given above.  The next call to `summary()` displays some summary statistics for the estimated regression.
+
+```{r}
+lmwages <- lm(MonthlyEarnings ~ 
+                IQ + Knowledge + YearsEdu + YearsExperience + Tenure,
+              data = df)
+summary(lmwages)
+```
+
+Notice that the regression predict the return to each new year of experience on monthly earnings is equal to \$13.45.  The return to an additional year of education is equal to \$46.31.
+
+Is it possible that the return to additional years of experience should be bigger for people with higher levels of education?  Could this be another benefit of receiving a higher education that is not yet in our model?  It could be that not only do people with a higher level of education benefit with a higher base pay, the rates of pay *increases* for additional experience with these types of jobs may be higher.
+
+We introduce an interaction effect between experience and education to allow for this effect and estimate its significance.  We introduce a new term into the regression that is equal to the `YearsEdu` variable *multiplied by* the `YearsExperience` variable.  The following call to `lm()` estimates such a model:
+
+```{r}
+lmwages <- lm(MonthlyEarnings ~ 
+                IQ + Knowledge + YearsEdu + YearsExperience + Tenure +
+                YearsEdu:YearsExperience,
+              data = df)
+summary(lmwages)
+```
+
+The coefficient on the interaction term is equal to $3.547$ and it is statistically significant at the 5\% level (p-value = $0.039$).  We found sufficient statistical evidence that experience and education have an interaction effect.  
+
+The coefficient is positive which implies higher levels of education lead to higher return for an additional year of experience.  It is equivalent to say that higher levels of experience lead to a higher return to an additional year of education.
+
+# Marginal Effects
+
+What is the impact on monthly earnings of an additional year of experience?  This is called the *marginal effect* of a year of experience
+
+In the simple linear regression with no interaction effects at the opening of this tutorial, the marginal effect is exactly the same as the estimate of the coefficient on experience
+
+With interaction effects, you can no longer answer the question looking at only one coefficient.  When experience increases by one year, the coefficient on `YearsExperience` suggests that monthly earnings *decreases* by \$33.48.  *That is not the end of the story*.  
+
+The coefficient on the interaction effect says that an additional year of experience leads to a \$3.55 raise *for each year of education* the person has obtained.  *The marginal effect is different for each person, depending on that person's average level of education*.
+
+The marginal effect for experience is given by,
+
+$$ me = b_{Exp} + b_{Exp*Edu} x_{Edu} $$
+
+For someone with 16 years of education (most likely a four-year college degree), the marginal effect for experience is equal to:
+
+$$ me = -33.48 + 3.55 (16) = \$23.32 $$
+
+The marginal effect on monthly earnings of an additional year of experience for a four year college grad is \$23.32.
+
+Let us examine the marginal effect for someone with 12 years of education (most likely someone with a high school degree and no college):
+
+$$ me = -33.48 + 3.55 (12) = \$9.12 $$
+
+To compute the *average marginal effect*, we can replace the mean value for years of education into the formula above:
+
+$$ \bar{me} = b_{Exp} + b_{Exp*Edu} \bar{x}_{Edu} $$
+
+Let us compute this in R:
+```{r}
+b <- lmwages$coefficients;
+me_exp <- b["YearsExperience"] + b["YearsEdu:YearsExperience"] * mean(df$YearsEdu)
+me_exp
+```
+
+The average return to an additional year of experience is equal to \$15.05
+
+

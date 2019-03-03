@@ -1,0 +1,155 @@
+---
+title: "Inference with Heteroskedasticity"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
+author: 
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
+---
+
+**Note on required packages:**  The following code requires the packages `lmtest`, `sandwich`, and `tidyverse`. The `sandwich` package contains procedures to estimate regression error variance that may change with the explanatory variables. The `lmtest` package contains procedures to conduct hypothesis tests when there is heteroskedasticity. If you have not done so, download and install the package `lmtest`, `sandwich`, and `tidyverse`. When the packages are installed, load these libraries.
+
+
+```{r,echo=TRUE, eval=FALSE}
+# This only needs to be executed once for your machine
+install.packages("lmtest") 
+
+# This only needs to be executed once for your machine
+install.packages("sandwich")
+
+# This only needs to be executed once for your machine
+install.packages("tidyverse")
+
+# This needs to be executed every time you load R
+library("lmtest")
+
+# This needs to be executed every time you load R
+library("sandwich") 
+
+# This needs to be executed every time you load R
+library("tidyverse") 
+```
+
+* * *
+
+```{r, include=FALSE}
+library("sandwich")
+library("lmtest")
+library("tidyverse")
+```
+
+* * * * 
+
+# Introduction 
+
+**Homoskedasticity** is the property that the variance of the error term of a regression (estimated by the variance of the residual in the sample) is the same across different values for the explanatory variables, or the same across time for time series models.
+
+**Heteroskedasticity** is the property when the variance of the error term changes predictably with one or more of the explanatory variables.
+
+# Example: Factors affecting monthly earnings 
+
+Let us examine a data set that explores the relationship between total monthly earnings (`MonthlyEarnings`) and a number of factors that may influence monthly earnings including including each person's IQ (`IQ`), a measure of knowledge workplace environment (`Knowledge`), years of education (`YearsEdu`), years experience (`YearsExperience`), and years at current job (`Tenure`).
+
+The code below downloads a CSV file that includes data on the above variables from 1980 for 663 individuals and assigns it to a data set called `df`.  
+
+```{r}
+load(url("http://murraylax.org/datasets/wage2.RData"))
+```
+
+The following call to `lm()` estimates a multiple regression predicting monthly earnings based on the five explanatory variables given above.  The call to `summary()` displays some summary statistics from the regression.
+
+```{r}
+lmwages <- lm(MonthlyEarnings 
+              ~ IQ + Knowledge + YearsEdu + YearsExperience + Tenure,
+              data = df)
+```
+
+# Heteroskedasticity robust standard errors 
+
+**White's correction for heteroskedasticity** is a method for using OLS estimates for coefficients and predicted values (which are unbiased), but fixing the estimates for the variances of the coefficients (which are biased).  It uses as an estimate for the *possibly changing* variance the squared residuals estimated from OLS which we computed and graphed above.
+
+In R, we can compute the White heteroskedastic variance/covariance matrix for the coefficients with the call below to `vcovHC` from the `sandwich` package. VCOVHC stands for Variance / Covariance Heteroskedastic Consistent.
+```{r}
+vv <- vcovHC(lmwages, type="HC1")
+```
+
+The first parameter in the call above is our original output from our call to `lm()` above.  The second parameter `type="HC1"` tells the function to use the White estimate for the variance covariance matrix which uses as an estimate for the changing variance the squared residuals from the OLS call.
+
+# Hypothesis testing 
+
+We can use our estimate for the variance / covariance to properly compute our standard errors, t-statistics, and p-values for the coefficients:
+
+```{r}
+coeftest(lmwages, vcov = vv)
+```
+
+The first parameter to `coeftest` is the result of our original call to `lm()` and the second parameter is the updated variance / covariance matrix to use.
+
+Let's compare the result to the OLS regression output:
+```{r}
+summary(lmwages)
+```
+
+The coefficients are exactly the same, but the estimates for the standard errors, the t-statistics, and p-values are slightly different.
+
+One reason the standard errors and p-values are only slightly different is that there may actually be very little heteroskedasticity.  The differences in variance of the error term may be small even for large differences in the predicted value for $x$.
+
+The White heteroskedastic robust standard errors are valid for **either homoskedasticity or heteroskedasticity**, so it is always safe to use these estimates if you are not sure if the homoskedasticity assumption holds.
+
+# Confidence Intervals 
+
+The function `confint()` computes confidence intervals for the coefficients, but assumes homoskedasticity.  Here is an example:
+
+```{r}
+confint(lmwages, conf.level=0.95)
+```
+
+Unfortunately, there R includes no similar method to compute confidence intervals for coefficients with heteroskedastic-robust standard errors. You can compute the confidence intervals manually based on the estimates of the variances from the `vcovHC()` function. I created such a function, which you can download and load into memory using the following call:
+
+```{r}
+source(url("https://murraylax.org/code/R/confintHC.R"))
+```
+
+We now have a *function* in our environment called `confintHC()`. We use this function in the code below to estimate 95\% confidence intervals on the coefficients using the White heteroskedasticity estimates for the variances.
+
+```{r}
+confintHC(lmwages, type="HC1", conf.level=0.95)
+```
+
+# Joint Test for Multiple Restrictions 
+
+Let us allow for an interactions effect between IQ and years of experience and IQ and years of education. The interaction effect with years experience allow for the possibility that people with a higher IQ get a greater return to years experience, possibly because people with a higher IQ learn more with each additional year of experience. The interaction effect with years education allows for the possibility that people with a higher IQ get greater benefits for each additional year of education.
+
+```{r}
+lmwages <- lm(MonthlyEarnings 
+              ~ IQ + Knowledge + YearsEdu + YearsExperience + Tenure +
+                IQ:YearsExperience + IQ:YearsEdu,
+              data = df)
+```
+
+Now suppose we want to test whether or not IQ has any influence on monthly earnings.  The variable IQ appears multiple times: once on its own and twice in interaction effects.  The null and alternative hypotheses for this test is given by,
+
+$$ H_0: \beta_{IQ} = 0,~~ \beta_{IQxYearsEdu} = 0,~~ \beta_{IQxYearsExperience} = 0 $$
+$$ H_A: \mbox{At least one of these is not equal to zero} $$
+
+The standard F-test for multiple restrictions that compares the sum of squared explained between an unrestricted and (nested) restricted model (often called the *Wald test*) *assumes homoskedasticity*, and so this test is not appropriate if heteroskedasticity is present.  
+
+There is a heteroskedasticity-robust version of the test which can be estimated with the `waldtest()` function.  The default output of `waldtest()` is the same as `anova()`, but it has the additional power that we can specify the correct variance / covariance matrix.
+
+First we estimate the restricted model, which does not include IQ in any of the terms:
+
+```{r}
+lmwages_res <- lm(MonthlyEarnings ~ Knowledge + YearsEdu + YearsExperience + Tenure, data = df)
+```
+
+Then we call `waldtest()`, passing both the restricted and unrestricted regression outputs, and we include our estimate for the variance / covariance robust estimator for the unrestricted model:
+
+```{r}
+vv <- vcovHC(lmwages, type="HC1")
+waldtest(lmwages, lmwages_res, vcov=vv)
+```
+
+The p-value is 0.007 which is below 0.05.  We reject the null hypothesis and conclude that there is sufficient statistical evidence that IQ does help explain monthly earnings.

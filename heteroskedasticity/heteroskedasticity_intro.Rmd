@@ -1,0 +1,198 @@
+---
+title: "Heteroskedasticity"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
+author: 
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
+---
+
+**Note on required packages:**  The following code requires the packages `lmtest`, `sandwich`, and `tidyverse`. The `sandwich` package contains procedures to estimate regression error variance that may change with the explanatory variables. The `lmtest` package contains procedures to conduct hypothesis tests when there is heteroskedasticity. If you have not done so, download and install the package `lmtest`, `sandwich`, and `tidyverse`. When the packages are installed, load these libraries.
+
+
+```{r,echo=TRUE, eval=FALSE}
+# This only needs to be executed once for your machine
+install.packages("lmtest") 
+
+# This only needs to be executed once for your machine
+install.packages("sandwich")
+
+# This only needs to be executed once for your machine
+install.packages("tidyverse")
+
+# This needs to be executed every time you load R
+library("lmtest")
+
+# This needs to be executed every time you load R
+library("sandwich") 
+
+# This needs to be executed every time you load R
+library("tidyverse") 
+```
+
+* * *
+
+```{r, include=FALSE}
+library("sandwich")
+library("lmtest")
+library("tidyverse")
+```
+
+* * * * 
+
+# Introduction 
+
+**Homoskedasticity** is the property that the variance of the error term of a regression (estimated by the variance of the residual in the sample) is the same across different values for the explanatory variables, or the same across time for time series models.
+
+**Heteroskedasticity** is the property when the variance of the error term changes predictably with one or more of the explanatory variables.
+
+Heteroskedasticity is common with financial variables related to income or spending.  Suppose you are interested in predicting spending on housing and one of your explanatory variables is income.  When income is low and the predicted value for spending on housing is low, the errors you make in the regression are also small.  For people in low income groups, the amount each spends on housing varies little from other people in the low income group.  For people in high income groups, the amount each spending on housing can vary greatly from other people in the high income group.  The variance of your error term increases as the predicted value for $y$ increases.  This is heteroskedasticity.
+
+**Problems and non-problems with heteroskedasticity:**
+
+1.  T-statistics and p-values from ordinary least squares (OLS) results assumes homoskedasticity.
+
+2.  Even with heteroskedasticity, the OLS estimates for your coefficients and predicted values for $y$ are still *unbiased*.  OLS is still useful.
+
+3.  OLS estimates for the *variances* of your coefficients are biased with heteroskedasticity.
+
+4.  There is a straightforward correction to the OLS variances to allow for heteroskedasticity, holding on to your OLS estimates for the coefficients and predicted values.
+
+
+# Example: Factors affecting monthly earnings 
+
+Let us examine a data set that explores the relationship between total monthly earnings (`MonthlyEarnings`) and a number of factors that may influence monthly earnings including including each person's IQ (`IQ`), a measure of knowledge workplace environment (`Knowledge`), years of education (`YearsEdu`), years experience (`YearsExperience`), and years at current job (`Tenure`).
+
+The code below downloads a CSV file that includes data on the above variables from 1980 for 663 individuals and assigns it to a data set called `df`.  
+
+```{r}
+load(url("http://murraylax.org/datasets/wage2.RData"))
+```
+
+The following call to `lm()` estimates a multiple regression predicting monthly earnings based on the five explanatory variables given above.  The call to `summary()` displays some summary statistics from the regression.
+
+```{r}
+lmwages <- lm(MonthlyEarnings 
+              ~ IQ + Knowledge + YearsEdu + YearsExperience + Tenure,
+              data = df)
+```
+
+Let us save the residuals and predicted values from the regression into a new dataframe.
+```{r}
+reg.df <- data.frame(resids=lmwages$residuals, predicts=lmwages$fitted.values)
+```
+
+Let's plot the residuals to see if they are more spread out for larger values of the predicted values:
+```{r}
+ggplot(reg.df, aes(x=predicts, y=resids)) +
+  geom_point() +
+  theme_bw() +
+  labs(title="Visual Inspection for Changing Variance",
+       x="Predicted Values", y="Residuals")
+```
+
+It does appear that the distribution is less spread out at the left end.  That is, at the lowest levels for predicted monthly earnings, the residuals are smaller.
+
+Let us also plot the *squared* residual against the predicted values.  The squared residual is an estimate of the variance of the error term:
+
+```{r}
+ggplot(reg.df, aes(x=predicts, y=resids^2)) +
+  geom_point() +
+  theme_bw() +
+  labs(title="Visual Inspection for Changing Variance",
+       x="Predicted Values", y="Squared Residuals")
+```
+
+A visual inspection suggests there may be a pattern.  As the predicted values increase, the variance of the error term increases.  This suggests there may be heteroskedasticity.
+
+Ordinary least squares assumes homoskedasticity. Said another way, ordinary least squares assumes the variance for the error term is the same for all predicted values.  When we have heteroskedasticity, the variance for the residual on each observation is different, and given by each observation's squared residual shown in the graph above.
+
+**In Section 3 below**, we learn how to correct the OLS estimates for the variances for the coefficients and predicted values making use of these squared residuals.
+
+**In Section 4 below**, we learn how to more formally test for the presence for heteroskedasticity.  It is based on the relationships we see in these graphs between the squared residuals and the predicted values.
+
+# Heteroskedasticity robust standard errors 
+
+**White's correction for heteroskedasticity** is a method for using OLS estimates for coefficients and predicted values (which are unbiased), but fixing the estimates for the variances of the coefficients (which are biased).  It uses as an estimate for the *possibly changing* variance the squared residuals estimated from OLS which we computed and graphed above.
+
+In R, we can compute the White heteroskedastic variance/covariance matrix for the coefficients with the call below to `vcovHC` from the `sandwich` package. VCOVHC stands for Variance / Covariance Heteroskedastic Consistent.
+```{r}
+vv <- vcovHC(lmwages, type="HC1")
+```
+
+The first parameter in the call above is our original output from our call to `lm()` above.  The second parameter `type="HC1"` tells the function to use the White estimate for the variance covariance matrix which uses as an estimate for the changing variance the squared residuals from the OLS call.
+
+Then we can use this estimate for the variance / covariance to properly compute our standard errors, t-statistics, and p-values for the coefficients:
+
+```{r}
+coeftest(lmwages, vcov = vv)
+```
+
+The first parameter to `coeftest` is the result of our original call to `lm()` and the second parameter is the updated variance / covariance matrix to use.
+
+Let's compare the result to the OLS regression output:
+```{r}
+summary(lmwages)
+```
+
+The coefficients are exactly the same, but the estimates for the standard errors, the t-statistics, and p-values are slightly different.
+
+One reason the standard errors and p-values are only slightly different is that there may actually be very little heteroskedasticity.  The differences in variance of the error term may be small even for large differences in the predicted value for $x$.
+
+The White heteroskedastic robust standard errors are valid for **either homoskedasticity or heteroskedasticity**, so it is always safe to use these estimates if you are not sure if the homoskedasticity assumption holds.
+
+# White test for heteroskedasticity 
+
+In section 2 we examined visual evidence that the magnitudes of the residuals or squared residuals were on average larger for larger predicted values for monthly earnings.  In this section, we will test this relationship more formally.
+
+The goal is to determine whether the squared residuals can be explained by the predicted values.  Both, the squared residuals and predicted values from the OLS regression are unbiased, so we will use these values.
+
+We run the following regression of the squared residuals on the predicted values and squared predicted values:
+
+```{r}
+lmhet <- lm(I(resids^2) ~ predicts + I(predicts^2), data=reg.df)
+summary(lmhet)
+```
+
+Do the predicted values from the regression explain the squared residuals?  We answer this with the joint F-test.
+
+$$ H_0: \beta_{predicts} = 0;~ \beta_{predicts^2} = 0~~~ \mbox{(i.e. homoskedasticity)} $$
+$$ H_A: \mbox{Either } \beta_{predicts} \neq 0 \mbox{ or } \beta_{predicts^2} \neq 0~~~ \mbox{(i.e. heteroskedasticity)} $$
+
+If the null hypothesis is true and both coefficients are equal to zero, then the predicted values of the regression do not explain the squared residuals.  In this case we say we have homoskedasticity: the variance of the residuals do not change predictably with the predicted values.
+
+If the alternative hypothesis is true then we have statistical evidence that either the predicted values or the squared predicted values helps explain the variance of the error term.  In this case we have heteroskedasticity: As the predicted values change, so does the variance of the error term.
+
+The p-value is 0.1127. We fail to find sufficient statistical evidence that the model exhibits heteroskedasticity. This may mean that we do not have heteroskedasticity, or it may mean we do not have enough power to find sufficient statistical evidence. The White heteroskedastic-robust test on the coefficients is safe with or without heteroskedasticity.
+
+# Functional Form 
+
+Heteroskedasticity on its own is a small problem.  OLS estimates for coefficients are still unbiased, and it is easy to correct standard errors and p-values to allow for the possibility of heteroskedasticity.
+
+However, sometimes heteroskedasticity is the result of a *misspecified model*.  That is, you estimated a functional form for the model that is not appropriate, that is not true in the data.
+
+It is common for financial variables and variables related to income, that larger numbers grow exponentially.  When we take the natural log of these variables, the transformed values grow linearly, and linear regression becomes more applicable.  
+
+Let us revisit the model above, but instead use the *natural log of monthly earnings* as the outcome variable:
+
+```{r}
+lmlogwages <- lm(log(MonthlyEarnings) 
+              ~ IQ + Knowledge + YearsEdu + YearsExperience + Tenure,
+              data = df)
+```
+
+Let us compute the White test for heteroskedasticity:
+```{r}
+logreg.df <- data.frame(resids=lmlogwages$residuals, predicts=lmlogwages$fitted.values)
+
+lmhet <- lm(I(resids^2) ~ predicts + I(predicts^2), data=reg.df)
+summary(lmhet)
+```
+
+The p-value for the joint F-test for regression significance is 0.1127  Again we fail to reject the null hypothesis. We fail to find statistical evidence that the variance of the residual changes with the predicted or squared predicted values.  We failed to find statistical evidence for heteroskedasticity.
+
+
+

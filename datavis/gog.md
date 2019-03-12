@@ -3,7 +3,7 @@ title: "Introduction to the Grammar of Graphics"
 author: 
   - "James M. Murray, Ph.D."
   - "University of Wisconsin - La Crosse"
-date: "Updated: October 04, 2018"
+date: "Updated: March 11, 2019"
 
 output: 
   html_document:
@@ -78,7 +78,7 @@ The following three layers are the minimum necessary for any type of plot:
 The line below downloads and loads the data set.
 
 ```r
-load(url("http://murraylax.org/datasets/cps2016.RData"))
+load(url("https://murraylax.org/datasets/cps2016.RData"))
 ```
 
 The data is in a `data.frame` object called `df` and a description of the variables is given in another `data.frame` object called `df.desc`.  You can familiarize yourself with the data set by opening these data frames in *Rstudio*.  Alternatively, you can get a short description of the data frame  `df` with a call to the `str()` function.

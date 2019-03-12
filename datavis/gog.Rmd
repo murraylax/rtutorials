@@ -1,22 +1,14 @@
 ---
 title: "Introduction to the Grammar of Graphics"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document:
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
-
-[PDF file location: http://www.murraylax.org/rtutorials/gog.pdf](http://www.murraylax.org/rtutorials/gog.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/gog.html](http://www.murraylax.org/rtutorials/gog.html)
 
 * * * * 
 *Note on required packages:*  The following code requires the packages `tidyverse`, `scales`, `stringr`, `Hmisc`, and `ggthemes`.
@@ -32,23 +24,19 @@ urlcolor: blue
 
 If you have not already done so, download, install, and load the libraries with the following code:
 
-`install.packages("tidyverse") # This only needs to be executed once for your machine`  
+```{r,echo=TRUE, eval=FALSE}
+# These lines only need to be executed once for your machine  
+install.packages("tidyverse") 
+install.packages("scales") 
+install.packages("stringr") 
+install.packages("Hmisc")
 
-`install.packages("scales") # This only needs to be executed once for your machine` 
-
-`install.packages("stringr") # This only needs to be executed once for your machine` 
-
-`install.packages("Hmisc") # This only needs to be executed once for your machine` 
-
-
-`library("tidyverse") # This needs to be executed every time you load R`
-
-`library("scales") # This needs to be executed every time you load R`
-
-`library("stringr") # This needs to be executed every time you load R`
-
-`library("Hmisc") # This needs to be executed every time you load R`
-
+# These lines need to be executed every time you load R
+library("tidyverse") 
+library("scales")
+library("stringr") 
+library("Hmisc") 
+```
 
 * * * * 
 ```{r,echo=FALSE, include=FALSE}
@@ -59,7 +47,7 @@ library("Hmisc")
 library("ggthemes")
 ```
 
-## 1. Introduction ##
+# Introduction 
 
 The **grammar of graphics** is a way of thinking about how graphs are constructed that allows data analysts to move beyond thinking about a small number of graph types (like bar graphs, line graphs, scatter plots, etc).
 
@@ -77,13 +65,13 @@ The following three layers are the minimum necessary for any type of plot:
 
 **3. Geometry**:  The type or shape of the visual elements on the graph.  For example, this could be a *point* in the case of a scatter plot, a *bar* in the case of a bar plot,  or a *line* in the case of a line plot.
 
-## 2. Example ##
+# Data Set 
 
-*Data set:* The following example uses a sample from the 2016 Current Population Survey which is a monthly survey conducted by the U.S. Census Bureau and Bureau of Labor Statistics. The data is used, among other things, to compute employment statistics related to earnings, hours employed, and unemployment. This particular sample includes 1,552 observations and includes only head-of-households.  
+The following example uses a sample from the 2016 Current Population Survey which is a monthly survey conducted by the U.S. Census Bureau and Bureau of Labor Statistics. The data is used, among other things, to compute employment statistics related to earnings, hours employed, and unemployment. This particular sample includes 1,552 observations and includes only head-of-households.  
 
 The line below downloads and loads the data set.
 ```{r}
-load(url("http://murraylax.org/datasets/cps2016.RData"))
+load(url("https://murraylax.org/datasets/cps2016.RData"))
 ```
 
 The data is in a `data.frame` object called `df` and a description of the variables is given in another `data.frame` object called `df.desc`.  You can familiarize yourself with the data set by opening these data frames in *Rstudio*.  Alternatively, you can get a short description of the data frame  `df` with a call to the `str()` function.
@@ -91,10 +79,12 @@ The data is in a `data.frame` object called `df` and a description of the variab
 str(df)
 ```
 
-## 3 Example 1: Scatter Plot ##
+# Example: Scatter Plot 
+
 We will use the three layers of the grammar of graphics above to create a basic scatter plot of the data.  We have two numerical variables in the data set, the survey respondents' annual income from wages and salaries (`incwage`) and their annual total health care expenditures, including health insurance premiums and out-of-pocket expenses for health care services (`totmed`).  We will create a scatter plot with `incwage` on the horizontal axis and `totmed` on the vertical axis.
 
-### 3.1 Data and Aesthetics Layers ###
+## Data and Aesthetics Layers 
+
 We will first create a ggplot object with the first two layers, **data** and **aesthetics**.
 ```{r}
 ggplot(data=df, mapping=aes(x=incwage, y=totmed))
@@ -106,7 +96,7 @@ The second parameter, `mapping`, is the aesthetics layer.  Here we map variable 
 
 What you will see is the foundation for the plot, but nothing to plot yet.  It does not yet specify a geometry layer, i.e. the geometrical shapes, to put on the graph.
 
-### 3.2 Geometry Layer ###
+## Geometry Layer 
 
 Additional layers can be "added" to the ggplot object using the addition symbol (+).  We next add a **geometry** layer.  There are many types of geometries that are available for ggplot.  We add *points* to the base plot above.
 
@@ -117,7 +107,7 @@ ggplot(data=df, mapping=aes(x=incwage, y=totmed)) +
 
 We have a plot, even if it is not too pretty, created with the minimum requirements for layers.  Like a minimal sentence with just a noun and verb, it communicates something, but maybe not very much, and maybe not very effectively. We will next add on a few layers to make the plot not only more visually appealing, but change the visualization so it is more effectively communicates the relationship between our two variables.
 
-### 3.3 Handling Over-plotting ###
+## Handling Over-plotting
 
 Our plot suffers from a common problem called **over-plotting**. This is when a number of data points or statistical visuals land on top of one another which hides data and can obscure a visual relationship.  
 
@@ -150,7 +140,7 @@ ggplot(data=df, mapping=aes(x=incwage, y=totmed)) +
 
 The plot itself looks much better. While the wide variability in the data still does not make it too clear whether there is a strong positive correlation, we can see the distribution of the data quite well.  In the next subsection, we will fix up some of the non-data ink, including the axes scale labels, axes titles, and plot title.
 
-### 3.4 Scales and Titles: Dressing up Non-data Ink ###
+## Scales and Titles: Dressing up Non-data Ink 
 
 In this section, we clean up some of the non-data ink to make our graph more visually appealing and more effectively communicate our variables and how they are measured.  Below we give the axes more descriptive labels and give the plot a title.  We also saw in the previous subsection that the scale labels on the horizontal axes was inconveniently expressed in scientific notation (i.e. `5e+4` was given as a label rather than `50,000`).  The in code below, we add to our zoomed-in scatter plot calls to `scale_x_continuous()` and `scale_y_continuous()` which set the notation for the x- and y-axis scale labels, respectively. 
 
@@ -177,18 +167,20 @@ ggplot(data=df, mapping=aes(x=incwage, y=totmed)) +
 ```
 
 
-## 4. Example 2: Bar Chart ##
+# Example: Bar Chart 
 
 Let us use our same data set and build another common plot using the grammar of graphics in `ggplot`.  In this example, we use the usual hourly earnings variable (`usualhrearn`) and education level (`edu`) to compare the *mean* usual hourly earnings across different levels of education.  Usual hourly earnings is a numerical variable expressed in dollars. Education level is an *ordinal* variable, which is a categorical variable, expressed descriptively as a string, but is encoded with an meaningful order.  That is, the variable is coded so that the value `"Baccalaureate degree" > "Some college"` and `"Some college" > "High school diploma"`, etc.
 
-### 4.1. Data and Aesthetics Layers ###
+## Data and Aesthetics Layers 
+
 We start with a call to `ggplot()` that specifies the data and aesthetics layer.  We use the same data frame as before and map the x-axis to `edu` and the y-axis to `usualhrearn`.
 
 ```{r}
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn))
 ```
 
-### 4.2. Statistics and Geometry Layers ##
+## Statistics and Geometry Layers 
+
 In the case of a bar plot, we do not wish to graph the raw data, but rather a *statistic* that summarizes the data.  Our statistic is the *mean*.  We wish to compute the mean usual hourly earnings for each education level, and plot rectangular bars with a height equal to the mean.  To do this, we will not specify a geometry layer, but rather a **statistics layer** which will both compute the statistic we are interested in and specify the *bar* geometry.
 
 ```{r}
@@ -196,11 +188,12 @@ ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) +
   stat_summary(fun.data=mean_sdl, geom="bar")
 ```
 
-We get a warning that thera are many missing observations not included because there are a number of people in our sample that are not employed so they did not have usual weekly hours and/or wage or salary income.  We still have over 1000 data points, so this is not problematic.
+We get a warning that there are many missing observations not included because there are a number of people in our sample that are not employed so they did not have usual weekly hours and/or wage or salary income.  We still have over 1000 data points, so this is not problematic.
 
 The call to `stat_summary()` specifies our statistics and geometry layer. The first parameter `fun.data=mean_sdl` tells `stat_summary()` what function to call to calculate the desired statistics.  The function `mean_sdl()` comes from the `Hmisc` package. It takes a single variable as a parameter and computes the mean and the upper and lower limits of the 95% confidence interval, the latter which is not used for the bar geometry.  The second parameter, `geom="bar"`, tells `stat_summary()` to use the bar geometry for the statistics it calculates.
 
-### 4.3. Labels and Titles ###
+## Labels and Titles 
+
 So that it is clear the vertical axis refers to usual hourly earnings in dollars, let us specify that the vertical scale labels be expressed in dollars.
 ```{r}
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
@@ -216,10 +209,11 @@ ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) +
   labs(title="Usual Hourly Earnings by Education Level", x="", y="")
 ```
 
-### 4.4. Fix Labels - Angled ###
+## Fix Labels - Angled
+
 The labels for the education levels are long and overlap with one another.  To address this, we can specify a **theme layer**.  The theme layer lets us calibrate all non-data ink on our graph.  In this case, we will use the theme layer to display the x-axis labels at an angle so that the labels do not overlap and we can read them.  The `theme()` function has dozens of possible parameters to calibrate everything from axes labels, titles, tick marks, legend, placement of all of these, background color and shading, and much, much more.
 
-In the call below, we add a theme layer to our `bar.p` object with a call to `theme()` to fix the x-axis labels. 
+In the call below, we add a theme layer with a call to `theme()` to fix the x-axis labels. 
 
 ```{r}
 ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) + 
@@ -231,7 +225,7 @@ ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) +
 
 We set the parameter for `axis.text.x` and call a function `element_text()` that allows us to specify an angle to write the text, vertical justification, and horizontal justification.  We set the text at a 30 degree angle, and set both vertical and horizontal justification equal to `1` so that text labels are right-aligned and top-aligned, which puts the end of the labels close to the horizontal axis.
 
-### 4.5. Fix Labels - Text Wrap ###
+## Fix Labels - Text Wrap 
 
 Alternatively, we can wrap our x-axis labels onto new lines so that they do not overwrite each other. To do this, we will change the text for the levels of the ordered factor variable, `edu`.  Let us remind ourselves what are these levels:
 ```{r}
@@ -259,7 +253,8 @@ ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) +
   labs(title="Usual Hourly Earnings by Education Level", x="", y="") 
 ```
 
-### 4.6. Make it Look Pretty with Color and Themes ###
+## Make it Look Pretty with Color and Themes 
+
 Let's add some color to our plot. There are many ways of adding color to a plot. Sometimes you may want to map color to a variable, for example, so that different levels of education are represented by different colors. In this case, we will use just one color, but make it something prettier than gray.
 
 We again recreate the plot from scratch, copying and pasting most of the above code. We add an optional parameters to the `stat_summary()`, `fill="dodgerblue4"`. The `fill` parameter sets the color of the bars. See http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf for a long-list of recognized colors.
@@ -281,10 +276,11 @@ ggplot(data=df, mapping=aes(x=edu, y=usualhrearn)) +
   theme_bw()
 ```
 
-## 5. Conclusion ##
+# Conclusion 
+
 In this tutorial, we introduced the concept of the grammar of graphics and illustrated how to use the `ggplot` package to create graphics using a minimal number of grammar layers. There are still more layers in the grammar of graphics to learn and a whole world of data visualizations and graphical customization that can be built with ggplot. This tutorial sets the framework that is used for all graphics and illustrates the grammar of graphics with two of the most simple and common plot types.
 
-## 6. Exercises ##
+# Exercises 
 
 1.  Use the data frame in this tutorial and create the scatter plots described in the following problems.
   

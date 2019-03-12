@@ -1,24 +1,17 @@
 ---
 title: "Scatter Plots to Communication Correlation"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document:
-    fig_width: 4
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
 
-[PDF file location: http://www.murraylax.org/rtutorials/scatter.pdf](http://www.murraylax.org/rtutorials/scatter.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/scatter.html](http://www.murraylax.org/rtutorials/scatter.html)
-
 * * * * 
+
 *Note on required packages:*  The following code requires the packages `tidyverse`, `scales`, `stringr`, `Hmisc`, and `ggthemes`.
 
 * The `tidyverse` package contains many packages that allow you to organize, summarize, and plot data. 
@@ -29,19 +22,17 @@ urlcolor: blue
 
 If you have not already done so, download, install, and load the libraries with the following code:
 
-`install.packages("tidyverse") # This only needs to be executed once for your machine`  
+```{r,echo=TRUE, eval=FALSE}
+# These lines only need to be executed once for your machine  
+install.packages("tidyverse")   
+install.packages("scales")  
+install.packages("ggthemes")  
 
-`install.packages("scales") # This only needs to be executed once for your machine` 
-
-`install.packages("ggthemes") # This only needs to be executed once for your machine` 
-
-
-`library("tidyverse") # This needs to be executed every time you load R`
-
-`library("scales") # This needs to be executed every time you load R`
-
-`library("ggthemes") # This needs to be executed every time you load R`
-
+# These lines need to be executed every time you load R
+library("tidyverse")
+library("scales")
+library("ggthemes")
+```
 
 * * * * 
 ```{r,echo=FALSE, include=FALSE}
@@ -50,11 +41,11 @@ library("scales")
 library("ggthemes")
 ```
 
-## 1. Introduction ##
+# Introduction
 
 The purpose of a scatter plot is to visually communicate the relationship between numerical (interval or ratio scale) variables. While a correlation coefficient is a statistic that can be used to describe the strength of a linear relationship, a visual can better better describe the nature of relationship and the behavior of the underlying variables.
 
-## 2. Why Visuals? Anscombe's Quartet ##
+# Why Visuals? Anscombe's Quartet
 
 Anscombe's quartet is a classic example of the drawback to just reporting correlation. Frank Anscombe illusrated in his 1973 *American Statistician* paper (https://www.jstor.org/stable/2682899) how a set of four different pairs of variables can deliver the same correlation coefficient, while the relationships between each pair are completely different.
 

@@ -1,27 +1,14 @@
 ---
 title: "Visualizing Cross Tabulations"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-output: 
-  pdf_document: 
-    fig_width: 7
-    fig_height: 4
-  html_document:
-    keep_md: yes
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
-
-<style>
-pre {
-  background-color: #e6faff;
-}
-</style>
-
-[PDF file location: http://www.murraylax.org/rtutorials/viscrosstabs.pdf](http://www.murraylax.org/rtutorials/viscrosstabs.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/viscrosstabs.html](http://www.murraylax.org/rtutorials/viscrosstabls.html)
 
 * * * *
 *Note on required packages:*  The following code requires the packages `tidyverse`, `scales`, `stringr`, and `ggthemes`.
@@ -36,22 +23,19 @@ pre {
 
 If you have not already done so, download, install, and load the libraries with the following code:
 
-`install.packages("tidyverse") # This only needs to be executed once for your machine`  
+```{r,echo=TRUE, eval=FALSE}
+# These lines only need to be executed once for your machine
+install.packages("tidyverse")  
+install.packages("scales")
+install.packages("stringr")
+install.packages("ggthemes") 
 
-`install.packages("scales") # This only needs to be executed once for your machine` 
-
-`install.packages("stringr") # This only needs to be executed once for your machine` 
-
-`install.packages("ggthemes") # This only needs to be executed once for your machine` 
-
-
-`library("tidyverse") # This needs to be executed every time you load R`
-
-`library("scales") # This needs to be executed every time you load R`
-
-`library("stringr") # This needs to be executed every time you load R`
-
-`library("ggthemes") # This needs to be executed every time you load R`
+# Thiese lines need to be executed every time you load R
+library("tidyverse") 
+library("scales") 
+library("stringr") 
+library("ggthemes") 
+```
 
 * * * * 
 ```{r,echo=FALSE, include=FALSE}
@@ -61,23 +45,24 @@ library("stringr")
 library("ggthemes")
 ```
 
-Cross-tabulations or contingency tables are tables used to describe relationships between two *categorical* variables. This table is also used in the computation of the *Chi-square test of independence*, which you can read more about [here](http://murraylax.org/rtutorials/chisqindep.html).
+Cross-tabulations or contingency tables are tables used to describe relationships between two *categorical* variables. This table is also used in the computation of the *Chi-square test of independence*, which you can read more about [here](https://murraylax.org/rtutorials/chisqindep.html).
 
-## 1 Example Data Set ##
+# Example Data Set 
 
-### 1.1 Download the Data ###
+## Download the Data
+
 We will discuss cross tabulations in the context of an example data set on financial behaviors and financial literacy from The National Financial Capability Study. The study is performed by the FINRA Investor Education Foundation. The survey was administered in 2009, 2012, and 2015. The 2015 study includes responses by more than 27,000 individuals from every demographic group across the United States.
 
 The data set `findata.RData` below includes a subset of the variables and observations from the full study. This subset includes 98 financial and demographic variables on 10,000 individuals across the country.
 
 The code below downloads the data and opens it, creating a data frame object, `df`.
 ```{r}
-load(url("http://murraylax.org/datasets/findata.RData"))
+load(url("https://murraylax.org/datasets/findata.RData"))
 ```
 
 In this tutorial, we will focus on two categorical variables, `FinDifficulty` and `LivingSituation`.
 
-### 1.2 Examining the Data: Financial Difficulty ###
+## Examining the Data: Financial Difficulty 
 
 `FinDifficulty` is an ordinal categorical variable that is a description of how difficult a person finds it to meet their expenses in a typical month.
 
@@ -112,10 +97,13 @@ Instead of looking at a table, we can visualize it with a bar graph. The code be
 ```{r}
 # Save the proportion table in an object 
 findiff.ptb <- prop.table(findiff.tb)
+
 # Convert the proportion table to a data frame
 findiff.df <- as.data.frame(findiff.ptb)
+
 # Converting to a data frame lost the names
 names(findiff.df) <- c("FinDifficulty", "Frequency")
+
 # Use the proportion table as the data frame in a call to ggplot()
 ggplot(data=findiff.df, mapping=aes(x=FinDifficulty, y=Frequency)) + 
   geom_col() 
@@ -129,7 +117,7 @@ In the next line we set the variable names of our data frame to `FinDifficulty` 
 
 Finally, we call `ggplot()` to create our plot. We set the data layer equal to our newly constructed `findiff.df`. We set the aesthetics layer by mapping the variable `FinDifficulty` to the x-axis and `Frequency` to the y-axis. We add the geometry layer that creates the columns with `geom_col()`.
 
-### 1.3 Improving the Data Visualization ###
+## Improving the Data Visualization 
 
 The plot is useful visualization to the researcher, but it should be cleaned up some if you wanted to present this to an audience.
 
@@ -198,7 +186,7 @@ ggplot(data=findiff.df, mapping=aes(x=FinDifficulty, y=Frequency)) +
 ```
 
 
-### 1.3 Examining the Data: Living Situation ###
+## Examining the Data: Living Situation 
 
 The variable `LivingSituation` refers to who, if anyone, that the individual answering the survey lives with. It is a nominal categorical variable. We can confirm the class and learn the levels of the variable with calls to `class()` and `levels()`.
 ```{r}
@@ -240,9 +228,9 @@ ggplot(data=livingsit.df, mapping=aes(x=LivingSituation, y=Frequency)) +
                         label=percent(Frequency)), size=5, nudge_y=0.03)
 ```
 
-## 2 Contingency Table ##
+# Contingency Table 
 
-### 2.1 Computing the Contingency Table ###
+## Computing the Contingency Table 
 
 A contingency table or cross-tabulation breaks both variables into its categories and reports how many observations in the data set fall into each paired subgroup. We can also use the function `table()` to create a contingency table. We create the contingency table and save the output to an object we call `tb`.
 
@@ -265,7 +253,8 @@ If we look along the first row, we see that *of those that live alone*, approxim
 
 If you look in the next row, you can see the story is somewhat different for individuals living with a partner or spouse. Of those, only 8\% find it very difficult to meet monthly expenses, 35.7\% find it somewhat difficult, and a majority, 56.2\%, do not find it difficult at all.
 
-### 2.2 Testing for Independence: The Chi-Square Test of Independence ###
+## Testing for Independence: The Chi-Square Test of Independence 
+
 In [this tutorial](http://murraylax.org/rtutorials/chisqindep.html) we describe the Chi-Square Test of Independence for determining statistical evidence for whether two categorical variables are related to one another.
 
 Our casual examination of the contingency table in the previous subsection suggested that a person's degree of financial difficulty (measured by `FinDifficulty`) may be related to one's living situation (measured by `LivingSituation`). 
@@ -280,11 +269,12 @@ The p-value for the test is less than $2.2 \times 10^{-16}$ (which is machine-ze
 
 What remains now is to construct some visualizations that can effectively communicate what that relationship is.
 
-## 3 Visualizing the Cross Tabulation Proportions ##
+# Visualizing the Cross Tabulation Proportions 
 
-### 3.1 Converting Contingency Table to Data Frame ###
+## Converting Contingency Table to Data Frame 
 
 The `ggplot()` function requires a data frame for creating a plot, so we must first convert our contingency table from a class `table` to a class `data.frame`. In the code that follows, we convert the proportions table to a data frame with the function `as.data.frame()` and examine it with the function `glimpse()` from the tidyverse.
+
 ```{r}
 tb.df <- as.data.frame(tb.prop)
 glimpse(tb.df)
@@ -297,12 +287,14 @@ Let us rename these variables appropriately.
 names(tb.df) <- c("LivingSituation", "FinDifficulty", "Frequency")
 ```
 
-### 3.2 Bar Charts ###
+## Bar Charts 
 
 We can make a very ugly stacked-bar chart with our new data frame. This kind of visualization is very common, but not very effective. Still, it makes a good start.
+
 ```{r}
 ggplot(tb.df, aes(x=LivingSituation, y=Frequency, fill=FinDifficulty)) + geom_col()
 ```
+
 The first parameter to `ggplot()` is the data frame where are contingency table proportions are stored, `tb.df`. The second parameter calls `aes()` to set up the aesthetics layer. We map the x-axis to the variable `Living Situation` to give us the living situation categories along the bottom. We map the y-axis to `Frequency` so that the height of the bars are the proportions. The last aesthetic we set is `fill`, which is the color the bars are filled with. We map `fill` to the variable `FinDifficulty` so each category for financial difficulty is shown with a different color.
 
 A stacked-bar chart stacks the bars on top of one another. This is often convenient when it makes intuitive sense to add up the responses within each x-axis category. In this case, it does makes sense that within each living situation, the proportions add up to 100\% (or 1.00).
@@ -318,7 +310,8 @@ ggplot(tb.df, aes(x=LivingSituation, y=Frequency, fill=FinDifficulty)) +
 
 This makes it easier to compare heights of bars within a living situation. For example, we can see among people with partners or spouses, many more of them have no difficulty meeting monthly expenses (blue bar) than finding it somewhat difficult (green bar). That situation is reversed for people living with parents.
 
-### 3.3 Line Plots ###
+## Line Plots 
+
 Generally, line plot are reserved for time-series variables, where time moves forward as you move to the right along the x-axis, and the y-axis shows the value the a variable takes over time.
 
 However, time plots are often useful for comparing across categories, for multiple categorical variables. The code below creates another plot with many of the same aesthetics as above.
@@ -336,7 +329,7 @@ The blue line illustrates those who have no difficulty, you can see that with tw
 
 That the lines cross are not all horizontal, and that they sometimes cross, are visual clues that there is a relationship between living situation and financial difficulty. If there were no relationship, we would expect the lines to be of possibly different heights, but to not change height with each living situation category. If there were no relationship, then we should see approximately the same percentage of people having financial difficulty regardless of their living situation. 
 
-### 3.4 Improving the Data Visualization ###
+## Improving the Data Visualization 
 
 **Some Basics: Thicker Lines, Titles, and Labels**
 

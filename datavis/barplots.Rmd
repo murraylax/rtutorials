@@ -374,7 +374,7 @@ ggplot(data=df, mapping=aes(x=industry, y=usualhrearn, fill=manu)) +
 
 
 ----
-# 5 Exercises
+# Exercises
 
 Use the data frame in this tutorial and create bar charts as described in the following problems.
 

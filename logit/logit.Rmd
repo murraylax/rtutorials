@@ -169,7 +169,7 @@ The code below computes the confusion matrix along with the several other model 
 confusionMatrix(as.factor(predicts), as.factor(df$approve))
 ```
 
-The first parameter to `confusion.matrix()` is the vector of predicted values and the second parameter is the vector of actual outcomes.
+The first parameter to `confusionMatrix()` is the vector of predicted values and the second parameter is the vector of actual outcomes.
 
 * When the actual value was $y=0$ (i.e. the loan was not approved), the logistic regression predicted $\hat{y}=0$ correctly only 8 times, and predicted $\hat{y}=1$ incorrectly 216 times
 

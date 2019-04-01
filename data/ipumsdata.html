@@ -590,11 +590,6 @@ text-align: center;
 font-style: italic;
 font-size: 90%;
 }
-img.mfp-img {
-background-color: #FFFFFF;
-padding: 0px;
-margin: 40px 0px;
-}
 
 .datatables {
 margin: 2em 0em;
@@ -904,6 +899,9 @@ word-break: normal;
 #content pre.sourceCode{
 
 margin:1px 0px 12px 0px;
+}
+#content div.sourceCode {
+background: #fcfcfc;
 }
 .table-wrapper {
 overflow-x: auto;
@@ -1597,8 +1595,8 @@ $(document).ready(function () {
 <a class="sourceLine" id="cb6-4" title="4">              <span class="st">&quot;Four Year College Degree&quot;</span>,</a>
 <a class="sourceLine" id="cb6-5" title="5">              <span class="st">&quot;Advanced College Degree&quot;</span>)</a></code></pre></div>
 <p>Next, let us assign the observations for the new variable <code>df$edu</code> based on the codes in <code>df$EDUC</code>.</p>
-<p>Those with <code>EDUC</code> values less than 73 have less than a high school education. This description is stored in our first element of <code>edulevels</code>:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">df<span class="op">$</span>edu[ df<span class="op">$</span>EDUC<span class="op">&lt;</span><span class="dv">73</span> ] &lt;-<span class="st"> </span>edulevels[<span class="dv">1</span>]</a></code></pre></div>
+<p>Those with <code>EDUC</code> values greater than 0 (exactly equal to 0 is “not in universe”, which we will keep as <code>NA</code>, i.e. as missing) and less than 73 have less than a high school education. This description is stored in our first element of <code>edulevels</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">df<span class="op">$</span>edu[ df<span class="op">$</span>EDUC<span class="op">&gt;</span><span class="dv">0</span> <span class="op">&amp;</span><span class="st"> </span>df<span class="op">$</span>EDUC<span class="op">&lt;</span><span class="dv">73</span> ] &lt;-<span class="st"> </span>edulevels[<span class="dv">1</span>]</a></code></pre></div>
 <p>Next, those with <code>EDUC</code> exactly equal to 73 have a high school diploma or equivalent, the second element of <code>edulevels</code>:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">df<span class="op">$</span>edu[ df<span class="op">$</span>EDUC<span class="op">==</span><span class="dv">73</span> ] &lt;-<span class="st"> </span>edulevels[<span class="dv">2</span>]</a></code></pre></div>
 <p>These with <code>EDUC</code> values greater than 73 and less than 111 have some college, but not a bachelor degree. This is associated with the third element of <code>edulevels</code>, “Some College”.</p>

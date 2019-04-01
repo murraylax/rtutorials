@@ -1,37 +1,38 @@
 ---
 title: "Logistic Regression"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
 author: 
-  - "James M. Murray, Ph.D."
-  - "University of Wisconsin - La Crosse"
-date: "Updated: `r format(Sys.time(), '%B %d, %Y')`"
-
-output: 
-  html_document:
-    keep_md: yes
-  pdf_document:
-    fig_width: 7
-    fig_height: 3.5
-urlcolor: blue
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
 ---
-
-[PDF file location: http://www.murraylax.org/rtutorials/logit.pdf](http://www.murraylax.org/rtutorials/logit.pdf)
-
-[HTML file location: http://www.murraylax.org/rtutorials/logit.html](http://www.murraylax.org/rtutorials/logit.html)
 
 * * * * 
 *Note on required packages:*  The following code requires the package `erer`, `caret`, and `e1071` to compute marginal effects statistics for a logistic regression and logistic regression fit statistics.  If you have not already done so, download, install, and load the library with the following code:
 
-`install.packages("erer")`  
+```{r,echo=TRUE, eval=FALSE}
 
-`install.packages("caret")`  
+# This only needs to be executed once for your machine
+install.packages("erer")
 
-`install.packages("e1071")`  
+# This only needs to be executed once for your machine
+install.packages("caret")
 
-`library("erer")`
+# This only needs to be executed once for your machine
+install.packages("e1071")
 
-`library("caret")`
+# This needs to be executed every time you load R
+library("erer")
 
-`library("e1071")`
+# This needs to be executed every time you load R
+library("caret")
+
+# This needs to be executed every time you load R
+library("e1071")
+```
 
 * * * * 
 ```{r,echo=FALSE, include=FALSE}
@@ -40,7 +41,7 @@ library("caret")
 library("e1071")
 ```
 
-## 1. Logistic Regression Structure ##
+# Logistic Regression Structure 
 
 Binary variables can be used to estimate *proportions* or *probabilities* that an event will occur.  If a binary variable is equal to 1 for when the event occurs, and 0 otherwise, estimates for the mean can be interpreted as the probability that the event occurs.
 
@@ -56,17 +57,18 @@ $$ Odds_i = \frac{P(y_i=1)}{P(y_i=0)} = \frac{P(y_i=1)}{1 - P(y_i=1)} $$
 
 The odds ratio has a range between 0 and $+\infty$, and increases as the probability that $y_i$ takes on a value of 1.0 increases.  The log odds ratio, $\log(Odds_i)$, can take on any value between $-\infty$ and $+\infty$.  The construction of the odds ratio and logarithmic operation transform our binary outcome variable to a variable with an infinite range.
 
-## 2. Example: Mortgage loan applications ##
+# Example: Mortgage loan applications 
 
 The data set, `loanapp.RData`, includes actual data from 1,777 mortgage loan applications, including whether or not a loan was approved, and a number of possible explanatory variables including demographic information of the applicants and financial variables related to the applicant's ability to pay the loan such as the applicant's income and employment information, value of the mortgaged property, and credit history.
 
 The code below loads the `R` data set, which creates a data frame called `df`, and a list of descriptions for the variables called `desc`.
 
 ```{r}
-load(url("http://murraylax.org/datasets/loanapp.RData"))
+load(url("https://murraylax.org/datasets/loanapp.RData"))
 ```
 
-## 3. Estimating a Logistic Regression ##
+# Estimating a Logistic Regression
+
 Let us estimate a logistic regression with loan approval status as the outcome variable (`approve`) and the following explanatory variables:
 
 * `loanprc`:Loan amount relative to price of the property
@@ -108,11 +110,11 @@ Some of the coefficients have expected signs, and most are statistically signifi
 
 The magnitude of the coefficients have no intuitive meaning. They are the magnitude that the *log odds ratio* increases when each explanatory variable increases by one unit.  
 
-## 4. Marginal Effects ##
+# Marginal Effects 
 
 The *marginal effects* of a regression are estimates of the impact that one-unit increases in the explanatory variables have on the outcome variable.  
 
-In a regular bivariate or multiple regression, the coefficients are equal to the marginal effects.
+In ordinary least squared regression, the coefficients are equal to the marginal effects.
 
 In a logistic regression, the marginal effects are defined as the impact that one-unit increases in the explanatory variables have on *the probability that the outcome variable is equal to 1.0*.  The right-hand-side expression in the logistic regression model is a log-odds ratio, which is a mathematical transformation of the probability that the outcome variable is equal to 1.0.  Therefore, we must take a transformation of the coefficients to obtain an estimate for the marginal effects.
 
@@ -137,7 +139,7 @@ The output above implies the following:
 * `unem`: A 1 percentage point increase in the unemployment rate in the applicant's industry is associated with a 0.6\% lesser chance of being approved for a loan.
 
 
-## 5. Confusion Matrix ##
+# Confusion Matrix 
 
 A confusion matrix gives a short comparison of the actual values for your outcome variable, and the values predicted from your outcome variable.
 
@@ -146,23 +148,27 @@ Let us first compute the predicted values from our logistic regression above.
 The return value from `glm()` that we called `lmapp` includes an object called `fitted.values`. These are the predicted probabilities based on our logistic regression model that a loan is approved for each observation in the sample.
 
 We can view the first few observations in this object with a call to `head()`:
+
 ```{r}
 head(lmapp$fitted.values)
 ```
+
 Each of the values are numbers between 0 and 1 for the probability that the outcome variable should take on a value of 1.
 
 A confusion matrix compares these predicted values with the actual values, and reports how often we correctly identified $y=1$ and $y=0$.  
 
-The code below creates predicted values for $y$ based on a cut off value of 0.5 for the predicted probability.
+The code below creates predicted values for $y$ based on a cut off value of $0.5$ for the predicted probability.
 
 ```{r}
 predicts <- as.numeric(lmapp$fitted.values >= 0.5)
 ```
 
 The code below computes the confusion matrix along with the several other model performance measures.
+
 ```{r}
-confusionMatrix(predicts, df$approve)
+confusionMatrix(as.factor(predicts), as.factor(df$approve))
 ```
+
 The first parameter to `confusion.matrix()` is the vector of predicted values and the second parameter is the vector of actual outcomes.
 
 * When the actual value was $y=0$ (i.e. the loan was not approved), the logistic regression predicted $\hat{y}=0$ correctly only 8 times, and predicted $\hat{y}=1$ incorrectly 216 times

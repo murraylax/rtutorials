@@ -82,7 +82,7 @@ summary(lmapp)
 Let us visualize the actual and predicted outcomes with a plot. The code below calls the `ggplot()` function to visualize the how loan approval depends on the size of the loan as a percentage of the price of the property. 
 
 ```{r}
-ggplot(data=df, mapping=aes(x=loanprc, y=approve)) + 
+ggplot(df, aes(x=loanprc, y=approve)) + 
   geom_point() + geom_smooth(method="lm", se=FALSE)
 ```
 
@@ -178,6 +178,55 @@ Also, be cautious when using the regression equation to make predictions outside
 The error term is not normal.  When it is, then with small or large sample sizes, the sampling distribution of your coefficient estimates and predicted values are also normal.
 
 While the residuals and the error term are never normal, *with a large enough sample size*, the central limit theorem does deliver normal distributions for the coefficient estimates and the predicted values.  This problem that the error term is not normal, is really only a problem with small samples.
+
+# Alternatives to the linear probability model 
+
+There are alternative methods out there for estimating binary dependent regression models that force the predicted values between 0 and 1, imposing some curvature on the regression model instead of a straight line.  
+
+One such model, called the *logistic regression model* imposes the logistic function.  A logistic function has the form:
+
+$$ f(x) = \frac{e^x}{1+e^x} $$
+
+We can plot this function with the following call to `curve()`:
+
+```{r}
+curve((exp(x) / (1 + exp(x))), 
+      from=-5, to=5, 
+      ylab="f(x)", main="Logistic Function",
+      col="red")
+```
+
+To get an idea for how well a straight line can approximate the logistic function, we add to the plot an equation for a straight line with slope equal to 0.2 and vertical intercept equal to 0.5:
+
+```{r}
+curve((exp(x) / (1 + exp(x))), 
+      from=-5, to=5, 
+      ylab="f(x)", main="Logistic vs Linear Function",
+      col="red")
+abline(a=0.5,b=0.2,col="blue")
+```
+
+Over a large range of values for $x$, including the values that are likely near the mean and median, the slope and predicted values of the linear equation approximate well the more complicated logistic function.
+
+# Considerations
+
+Which model should one pick, the logistic regression or linear probability model (LPM)? 
+
+1. Logistic function is mathematically appropriate. The linear probability model is only an approximation of the truth.
+
+2. There is a lot more you can do with the linear probability model.
+
+3. A lot of things, like *marginal effects*, are much easier with the linear probability model.
+
+4. Estimate both, compare your predictions. 
+
+  - Often enough they are very similar
+  
+  - Make sure predicted values from LPM are not negative or above 1, except maybe one or two outliers
+  
+  - If similar, and few or no obviously wrong predictions, use the LPM.
+  
+  - If predicted values at extremes (near 0\% and near 100\%) are important, use logistic regression.
 
 
 <!--

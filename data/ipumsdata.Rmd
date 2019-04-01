@@ -102,9 +102,9 @@ edulevels = c("Less than high school",
 
 Next, let us assign the observations for the new variable `df$edu` based on the codes in `df$EDUC`.
 
-Those with `EDUC` values less than 73 have less than a high school education. This description is stored in our first element of `edulevels`:
+Those with `EDUC` values greater than 0 (exactly equal to 0 is "not in universe", which we will keep as `NA`, i.e. as missing) and less than 73 have less than a high school education. This description is stored in our first element of `edulevels`:
 ```{r}
-df$edu[ df$EDUC<73 ] <- edulevels[1]
+df$edu[ df$EDUC>0 & df$EDUC<73 ] <- edulevels[1]
 ```
 
 Next, those with `EDUC` exactly equal to 73 have a high school diploma or equivalent, the second element of `edulevels`:

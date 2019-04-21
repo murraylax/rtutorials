@@ -1,0 +1,296 @@
+---
+title: "Time Series Forecasting"
+subtitle: "<a href='https://murraylax.org/rtutorials' target='blank'>R Tutorials for Applied Statistics</a>"
+author: 
+  - name: "<a href='https://murraylax.org' style='color:white' target='blank'>James M. Murray, Ph.D.</a>"
+    affiliation: "<a href='https://www.uwlax.edu' style='color:white' target='blank'>University of Wisconsin - La Crosse</a><br/><a href='https://murraylax.org/rtutorials' style='color:white; font-weight: bold;' target='blank'>R Tutorials for Applied Statistics</a>"
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
+---
+
+* * * * 
+*Note on required packages:*  The following code requires the packages `fpp2`, `quantmod`, and `scales`. The package `fpp2` contains many time series functions. The `quantmod` package allows you to download and bring into memory financial and macroeconomic data from common sources. The package `scales` is used to change the scales in our plots. If you have not already done so, download, install, and load the library with the following code:
+
+```{r,echo=TRUE, eval=FALSE}
+
+# These only needs to be executed once for your machine or RStudio Cloud project
+install.packages("fpp2")
+install.packages("quantmod")
+install.packages("scales")
+
+
+# These need to be executed every time you load R
+library(fpp2)
+library(quantmod)
+library(scales)
+```
+
+* * * * 
+```{r,echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
+library(fpp2)
+library(quantmod)
+library(scales)
+```
+
+# Download Data
+We will use R code to download latest available macroeconomic data from the Federal Reserve Economic Database (FRED). It is useful to browse https://fred.stlouisfed.org to identify variables you are interested in. At each variable's page, there is a code next to the name, which is used in the call below. 
+
+Below we use the `getSymbols()` function in the `quantmod` package to download and load into memory monthly unemployment rate that is not seasonally adjusted. The code for this variable in FRED is.
+
+```{r, warning=FALSE}
+getSymbols("UNRATENSA", src="FRED")
+```
+
+This creates a time series object called `UNRATENSA` (short for unemployment rate - not seasonally adjusted). We can show a quick plot of our data with the following call to `autoplot()`
+
+```{r}
+autoplot(UNRATENSA)
+```
+
+We can look at the first few observations with a call to `head()`.
+```{r}
+head(UNRATENSA)
+```
+
+We can see this is monthly data. It is important to check if the frequency of the data is consistent with the monthly measurement. Since there are 12 months in a year, the frequency should equal 12. 
+
+```{r}
+frequency(UNRATENSA)
+```
+
+The frequency is set incorrectly to 1. We will need to create a new time series object with the same data, but with the appropriate frequency. When plotting it will be more also useful if the unemployment data is given as a decimal, as putting percentages on scales automatically multiplies the number by 100. So the data we give is our original data divided by 100.
+
+In the code below, we create a new time series object called `unrate` with these adjustments.
+
+```{r}
+unrate <- ts(UNRATENSA/100, frequency=12, start=c(1948,1))
+```
+
+Let's use our new time series object to create a more visually appealing plot:
+```{r}
+autoplot(unrate) +
+  theme_bw() +
+  labs(title="Unemployment Rate", x="", y="") +
+  scale_y_continuous(label=percent) +
+  theme(text = element_text(size=15))
+```
+
+# Naive Forecasts
+
+The simplest forecast to give for any time series variable is the naive forecast. It simply uses the last observation in the sample, and guesses this will be the value for all future observations.
+
+## Random Walk Model
+
+While it sounds stupid, the naive estimator is actually the most accurate estimator if the variable follows a random walk model:
+
+$$ x_t = x_{t-1} + \epsilon_t $$
+
+The random walk model simply says that the next observation in a time series is equal to the previous value plus a random step given by $\epsilon_t$.
+
+Another reason the naive forecast is taken so seriously, is that despite its simplicity, many times it outperforms other complicated forecasts in terms of accuracy. As such, it is a useful benchmark.
+
+## Computing and Plotting Naive Forecast
+
+We compute the naive forcast below with a call to `naive()` and save the result in a forecast object that we called `fNaive`. For all the forecasts in this tutorial, we will use a forecast horizon equal to 24 months.
+
+```{r}
+horizon = 24
+fNaive <- naive(unrate, h=horizon)
+```
+
+We can view the forecasts by calling our saved object, `fNaive`.
+
+```{r}
+fNaive
+```
+
+Our naive forecast simply guesses that all future values of the unemployment rate will be 3.9\%, as the most recent observation is 3.9\%.
+
+We can make a quick plot of our data and our forecast with `autoplot()`.
+
+```{r}
+autoplot(fNaive)
+```
+
+Our plot also includes an 80\% and 95\% confidence intervals representing the margin of error in our forecasts.
+
+Let's make a more visually appealing plot, looking at just data since 2005 and the two years of forecasts (through 2021).
+
+```{r}
+autoplot(fNaive) +
+  theme_bw() +
+  scale_y_continuous(labels=percent) +
+  scale_x_continuous(limits=c(2005,2021)) +
+  theme(text = element_text(size=15)) +
+  labs(title="Unemployment Rate Forecasts (Naive Method)", 
+       x="", y="",
+       fill="Confidence Intervals") +
+  theme(legend.position = "bottom")
+```
+
+## Seasonal Naive Forecast
+
+Our time series contains predictable seasonality. A naive forecast that takes this into account is instead of using the most recent observation to predict the indefinite future, we use the most recent observation from the same month. For example, the forecast for January 2020 is equal to the value in January 2019. The forecast for February 2020 is equal to the value February 2019.
+
+Below, we compute the seasonal naive forecast with the function `snaive()` and show its plot.
+
+```{r}
+fSeasonNaive <- snaive(unrate, h=horizon)
+autoplot(fSeasonNaive) +
+  theme_bw() +
+  scale_y_continuous(labels=percent) +
+  scale_x_continuous(limits=c(2005,2021)) +
+  theme(text = element_text(size=15)) +
+  labs(title="Unemployment Rate Forecasts (Seasonal Naive Method)", 
+       x="", y="",
+       fill="Confidence Intervals") +
+  theme(legend.position = "bottom")
+```
+
+# Autoregression Models
+
+An autoregression model is a linear regression forecasting model where the time series variable is regressed against one or more lags of the same variable. An autoregressive model of order $p \geq 1$ (denoted by AR(p)) is given by,
+
+$$ x_t = \rho_1 x_{t-1} + \rho_2 x_{t-2} + ... + \rho_p x_{t-p} + \epsilon_t $$
+
+For example, we can estimate an AR(2) model on our unemployment rate data. In the code below, we estimate our model, create our forecast, and plot the forecast. We use the `Arima()` function, which can be used to estimate a large class of models including the autogression model.
+
+```{r}
+p = 2 # Autoregressive order
+armodel <- Arima(unrate, order=c(p,0,0))
+
+far <- forecast(armodel, h=horizon)
+
+autoplot(far) + 
+  theme_bw() +
+  scale_y_continuous(labels=percent) +
+  scale_x_continuous(limits=c(2005,2021)) +
+  theme(text = element_text(size=15)) +
+  labs(title="Unemployment Rate AR(2) Forecasts", 
+       x="", y="",
+       fill="Confidence Intervals") +
+  theme(legend.position = "bottom")
+```
+
+The above forecasts are missing the seasonality component of the data. Below, we estimate a model that includes the last two lags *and* the last two observations from the same month. This allows us to use information from the most recent months *and* and information from the same month from the most recent years.  The model we are estimating is the following:
+
+$$ x_t = \rho_1 x_{t-1} + \rho_2 x_{t-2} + \phi_1 x_{t-12} + \phi_2 x_{t-24} + \epsilon_t $$
+
+```{r}
+p = 2 # Autoregressive order
+k = 2 # Seasonal autoregressive order
+sarmodel <- Arima(unrate, order=c(p,0,0), 
+                  seasonal=list(order=c(k,0,0),period=12))
+
+fsar <- forecast(sarmodel, h=horizon)
+
+autoplot(fsar) + 
+  theme_bw() +
+  scale_y_continuous(labels=percent) +
+  scale_x_continuous(limits=c(2005,2021)) +
+  theme(text = element_text(size=15)) +
+  labs(title="Unemployment Rate AR(2)(2) Forecasts", 
+       x="", y="",
+       fill="Confidence Intervals") +
+  theme(legend.position = "bottom")
+```
+
+# Autocorrelation 
+
+We can look at autocorrelation for choosing lag length. The autocorrelation coefficient is simply the Pearson correlation coefficient of the series compared to a lag of the same series. 
+
+The `ggAcf()` function produces a plot of the **autocorrelation function** for a number of lag lengths:
+
+```{r}
+ggAcf(unrate, lag.max = 48)
+```
+
+The horizontal blue dotted line shows where the correlation coefficients are statistically significantly greater than equal to zero. All the autocorrelation coefficients between 1 month lag and 48 months lag are statistically significant. 
+
+That does not mean that all 48 lags should go into the regression though. Just persistence at one lag is enought to cause correlation at longer lags. Imagine in reality, only one lag is causally important in the regression. Then $x_{t-1}$ is correlated with $x_{t}$. It is also true that $x_{t-2}$ is correlated with $x_{t-1}$. Since $x_{t-2}$ is correlated with $x_{t-1}$, and $x_{t-1}$ is correlated with $x_{t}$, then depending on the strenghts of these correlations, $x_{t-2}$ may be correlated to $x_t$.
+
+The **partial autocorrelation function** nets out explanatory power already explained by later lags. Therefore, the 2nd order partial autocorrelation is the additional explanatory power from $x_{t-2}$ for $x_t$ that is not already explained by $x_{t-1}$.
+
+Here is a look at the partial autocorrelation function:
+```{r}
+ggPacf(unrate, lag.max = 48)
+```
+
+Many of the lags between 1 and 11 are statistically significant. We also see statistically signficant seasonality, going back three years.
+
+This plot suggests it may be appropriate to use more lags. We need to be careful not to include too many lags in the model, as there is much multicolinearity in these regressors, which will become increasingly difficult for the numerical optimizing procedure used within `Arima()`. We now estimate an AR(4)(3) model. This includes the four most recent lags and $x_{t-12}$, $x_{t-24}$, and $x_{t-36}$ as explanatory variables,
+
+```{r}
+p = 4 # Autoregressive order
+k = 3 # Seasonal autoregressive order
+sarmodel_4_3 <- Arima(unrate, order=c(p,0,0), 
+                  seasonal=list(order=c(k,0,0),period=12))
+
+fsar <- forecast(sarmodel_4_3, h=horizon)
+
+autoplot(fsar) + 
+  theme_bw() +
+  scale_y_continuous(labels=percent) +
+  scale_x_continuous(limits=c(2005,2021)) +
+  theme(text = element_text(size=15)) +
+  labs(title="Unemployment Rate AR(4)(3) Forecasts", 
+       x="", y="",
+       fill="Confidence Intervals") +
+  theme(legend.position = "bottom")
+```
+
+# Moving Average Models
+
+Moving average models suppose a shock to a time series doesn't just hit in one period, but continues over several periods. A moving average model of order $q$ MA(q) takes the following form:
+
+$$x_t = \epsilon_t + \theta_1 \epsilon_{t-1} + \theta_2 \epsilon_{t-2} + ... \theta_q \epsilon_{t-q}.$$
+
+The current value of a time series variable is impacted by a new shock today ($\epsilon_t$) and by a shock that started last period ($\epsilon_1$), a shock from the period before ($\epsilon_{t-2}$), and so on. Usually, but not always, the magnitudes of the coefficients $\theta_i$ diminish with longer lags.
+
+We can use the same `Arima()` function to estimate a moving average model. Consider the following MA(2).
+
+```{r}
+q = 2 # Moving average order
+mamodel <- Arima(unrate, order=c(0,0,q))
+
+fma <- forecast(mamodel, h=horizon)
+
+autoplot(fma) + 
+  theme_bw() +
+  scale_y_continuous(labels=percent) +
+  scale_x_continuous(limits=c(2005,2021)) +
+  theme(text = element_text(size=15)) +
+  labs(title="Unemployment Rate MA(2) Forecasts", 
+       x="", y="",
+       fill="Confidence Intervals") +
+  theme(legend.position = "bottom")
+```
+
+Again, we ignored an important seasonality component. In the code below, we consider the following moving average model with seasonal effects.
+
+$$x_t = \epsilon_t + \theta_1 \epsilon_{t-1} + \theta_2 \epsilon_{t-2} + \psi_1 \psi_{t-12} + \psi_2 \epsilon_{t-24}.$$
+
+```{r}
+q = 2 # Moving average order
+sq = 2 # Seasonal moving average order
+smamodel <- Arima(unrate, order=c(0,0,q),
+                 seasonal = list(order=c(0,0,sq), period=12))
+
+fsma <- forecast(smamodel, h=horizon)
+
+autoplot(fsma) + 
+  theme_bw() +
+  scale_y_continuous(labels=percent) +
+  scale_x_continuous(limits=c(2005,2021)) +
+  theme(text = element_text(size=15)) +
+  labs(title="Unemployment Rate MA(2)(2) Forecasts", 
+       x="", y="",
+       fill="Confidence Intervals") +
+  theme(legend.position = "bottom")
+```
+
+These forecasts suggest the unemployment rate will increase. The reason is that the unemployment rate was higher 2 years ago and 3 years ago than it is today. Our model may or may not be an appropriate description of unemployment behavior.
+

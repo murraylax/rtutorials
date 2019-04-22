@@ -94,7 +94,7 @@ Another reason the naive forecast is taken so seriously, is that despite its sim
 
 ## Computing and Plotting Naive Forecast
 
-We compute the naive forcast below with a call to `naive()` and save the result in a forecast object that we called `fNaive`. For all the forecasts in this tutorial, we will use a forecast horizon equal to 24 months.
+We compute the naive forecast below with a call to `naive()` and save the result in a forecast object that we called `fNaive`. For all the forecasts in this tutorial, we will use a forecast horizon equal to 24 months.
 
 ```{r}
 horizon = 24
@@ -156,7 +156,7 @@ An autoregression model is a linear regression forecasting model where the time 
 
 $$ x_t = \rho_1 x_{t-1} + \rho_2 x_{t-2} + ... + \rho_p x_{t-p} + \epsilon_t $$
 
-For example, we can estimate an AR(2) model on our unemployment rate data. In the code below, we estimate our model, create our forecast, and plot the forecast. We use the `Arima()` function, which can be used to estimate a large class of models including the autogression model.
+For example, we can estimate an AR(2) model on our unemployment rate data. In the code below, we estimate our model, create our forecast, and plot the forecast. We use the `Arima()` function, which can be used to estimate a large class of models including the autoregression model.
 
 ```{r}
 p = 2 # Autoregressive order
@@ -210,7 +210,7 @@ ggAcf(unrate, lag.max = 48)
 
 The horizontal blue dotted line shows where the correlation coefficients are statistically significantly greater than equal to zero. All the autocorrelation coefficients between 1 month lag and 48 months lag are statistically significant. 
 
-That does not mean that all 48 lags should go into the regression though. Just persistence at one lag is enought to cause correlation at longer lags. Imagine in reality, only one lag is causally important in the regression. Then $x_{t-1}$ is correlated with $x_{t}$. It is also true that $x_{t-2}$ is correlated with $x_{t-1}$. Since $x_{t-2}$ is correlated with $x_{t-1}$, and $x_{t-1}$ is correlated with $x_{t}$, then depending on the strenghts of these correlations, $x_{t-2}$ may be correlated to $x_t$.
+That does not mean that all 48 lags should go into the regression though. Just persistence at one lag is enough to cause correlation at longer lags. Imagine in reality, only one lag is causally important in the regression. Then $x_{t-1}$ is correlated with $x_{t}$. It is also true that $x_{t-2}$ is correlated with $x_{t-1}$. Since $x_{t-2}$ is correlated with $x_{t-1}$, and $x_{t-1}$ is correlated with $x_{t}$, then depending on the strengths of these correlations, $x_{t-2}$ may be correlated to $x_t$.
 
 The **partial autocorrelation function** nets out explanatory power already explained by later lags. Therefore, the 2nd order partial autocorrelation is the additional explanatory power from $x_{t-2}$ for $x_t$ that is not already explained by $x_{t-1}$.
 
@@ -219,7 +219,7 @@ Here is a look at the partial autocorrelation function:
 ggPacf(unrate, lag.max = 48)
 ```
 
-Many of the lags between 1 and 11 are statistically significant. We also see statistically signficant seasonality, going back three years.
+Many of the lags between 1 and 11 are statistically significant. We also see statistically significant seasonality, going back three years.
 
 This plot suggests it may be appropriate to use more lags. We need to be careful not to include too many lags in the model, as there is much multicolinearity in these regressors, which will become increasingly difficult for the numerical optimizing procedure used within `Arima()`. We now estimate an AR(4)(3) model. This includes the four most recent lags and $x_{t-12}$, $x_{t-24}$, and $x_{t-36}$ as explanatory variables,
 
@@ -274,10 +274,10 @@ Again, we ignored an important seasonality component. In the code below, we cons
 $$x_t = \epsilon_t + \theta_1 \epsilon_{t-1} + \theta_2 \epsilon_{t-2} + \psi_1 \psi_{t-12} + \psi_2 \epsilon_{t-24}.$$
 
 ```{r}
-q = 2 # Moving average order
-sq = 2 # Seasonal moving average order
+q <- 2 # Moving average order
+m <- 2 # Seasonal moving average order
 smamodel <- Arima(unrate, order=c(0,0,q),
-                 seasonal = list(order=c(0,0,sq), period=12))
+                 seasonal = list(order=c(0,0,m), period=12))
 
 fsma <- forecast(smamodel, h=horizon)
 
@@ -294,3 +294,137 @@ autoplot(fsma) +
 
 These forecasts suggest the unemployment rate will increase. The reason is that the unemployment rate was higher 2 years ago and 3 years ago than it is today. Our model may or may not be an appropriate description of unemployment behavior.
 
+# ARMA Models
+
+We can combine what we know about autoregressive models and moving average models into one model. An ARMA(p,q) model is given by,
+
+$$ x_t = \rho_1 x_{t-1} + \rho_2 x_{t-2} + ... + \rho_p x_{t-p} + \epsilon_t + \theta_1 \epsilon_{t-1} + \theta_2 \epsilon_{t-2} + ... \theta_q \epsilon_{t-q}. $$
+
+Similar to above, we can also add autoregressive terms and moving average terms for seasonality.
+
+The following model has $p=2$ autoregressive terms, $q=2$ moving average terms, $k=3$ seasonal autoregressive terms, $m=1$ seasonal moving average terms:
+
+```{r}
+p <- 2 # Autoregressive order
+q <- 2 # Moving average order
+k <- 3 # Seasonal autoregressive order
+m <- 1 # Seasonal moving average order
+armamodel <- Arima(unrate, order=c(p,0,q),
+                 seasonal = list(order=c(k,0,m), period=12))
+
+farma <- forecast(armamodel, h=horizon)
+
+autoplot(farma) + 
+  theme_bw() +
+  scale_y_continuous(labels=percent) +
+  scale_x_continuous(limits=c(2005,2021)) +
+  theme(text = element_text(size=15)) +
+  labs(title="Unemployment Rate ARMA(4,2)(3,1) Forecasts", 
+       x="", y="",
+       fill="Confidence Intervals") +
+  theme(legend.position = "bottom")
+```
+
+# Comparing Models
+
+We can compare the fit of models in terms of their in-sample fit and their out-of-sample forecast accuracy. 
+
+We will start by breaking the sample into two parts, a **training** set and a **testing** set. We'll estimate all the above models on the training set, and then use the estimated model to forecast over the testing sample period. Since we know the actual values that occurred in the testing set, we can see how closely each model's forecasts align with the actual values.
+
+First, let's slit the sample into the training set and testing set. We set the training set from the beginning of the sample to the end of 2009, and the test set from January 2010 through the end of the available data. 
+
+```{r}
+trainset <- window(unrate, end=c(2009,12))
+testset <- window(unrate, start=c(2010,1))
+```
+
+Now, let's estimate all of the models above on the training set. We will focus on the accuracy at only a one-month horizon (the best fitting model may differ depending on the horizon considered).
+
+```{r}
+horizon = 1
+
+# Naive model
+fNaive <- naive(trainset, h=horizon)
+# Seasonal naive model
+fSeasonNaive <- snaive(trainset, h=horizon)
+
+# AR(2)
+armodel <- Arima(trainset, order=c(2,0,0))
+far <- forecast(armodel, h=horizon)
+
+# AR(2)(2) Seasonal
+sarmodel <- Arima(trainset, order=c(2,0,0), 
+                  seasonal=list(order=c(2,0,0), period=12))
+fsar <- forecast(sarmodel, h=horizon)
+
+# MA(2)
+mamodel <- Arima(trainset, order=c(0,0,2))
+fma <- forecast(mamodel, h=horizon)
+
+# MA(2)(2) Seasonal
+smamodel <- Arima(trainset, order=c(0,0,2),
+                 seasonal = list(order=c(0,0,2), period=12))
+fsma <- forecast(smamodel, h=horizon)
+
+# ARMA(2,2)(3,1)
+armamodel <- Arima(trainset, order=c(2,0,2),
+                 seasonal = list(order=c(3,0,1), period=12))
+
+farma <- forecast(armamodel, h=horizon)
+```
+
+The accuracy function reveals several measures of in-sample fit and forecast accuracy. Let's look at the naive forecast first.
+
+```{r}
+accuracy(fNaive, testset)
+```
+
+The measures of fit include the following,
+
+ * ME: Mean error (positives and negatives may cancel each other out)
+ 
+ * RMSE: Root mean squared error (similar to standard error formula in regression)
+ 
+ * MAE: Mean absolute error (absolute values of errors are averaged)
+ 
+ * MPE: Mean percentage error (error as a percentage of the value, positives and negatives can cancel each other out)
+ 
+ * MAPE: Mean absolute percentage error (absolute value of errors as a percentage of the data values)
+ 
+ * MASE: Mean absolute scaled error (average of absolute values of errors scaled to number of standard deviations)
+ 
+ * ACF1: First-order autocorrelation of errors
+ 
+ Now, we look at all the forecasts fit statistics.
+ 
+```{r}
+accuracy(fNaive, testset)
+accuracy(fSeasonNaive, testset)
+accuracy(far, testset)
+accuracy(fsar, testset)
+accuracy(fma, testset)
+accuracy(fsma, testset)
+accuracy(farma, testset)
+```
+
+In terms of RMSE and MAE, the AR(2)(2) appears to be the best model for forecasting, among those considered.
+
+There is little theory dictating how many AR or MA lags one should put in the model, and there are dozens or hundreds of combinations you could consider. There exist many automated procedures used for determining the best number of lags. The `auto.arima()` function uses a method by [Hyndman & Khandakar (2008)](https://doi.org/10.18637/jss.v027.i03) that iterates over many possibilities and chooses a set of lags based on a measure of in-sample fit that also includes penalties for adding more parameters.
+
+The following code searches for the best fit ARMA(p,q)(k,m) model.
+
+```{r}
+aa <- auto.arima(trainset,d=0,D=0)
+aa
+```
+
+The best fitting model appears to have $p=5$ autoregressive lags, $q=1$ moving average lag, $k=1$ autoregressive seasonal lag, and $m=0$ moving average seasonal lags.
+
+Let us look examine the in-sample and out-of-sample accuracy at the one-month horizon:
+
+```{r}
+faa <- forecast(aa, horizon=1)
+accuracy(faa, testset)
+```
+
+The in-sample fit is similar to some of the others we examined above, and some of the above even slightly out-perform this one. The out-of-sample fit is actually worse than several of the models examined above. 

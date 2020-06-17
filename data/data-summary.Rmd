@@ -1,0 +1,48 @@
+---
+title: "Commentary: Introduction to Data"
+author: "James M. Murray, Ph.D."
+output:
+  rmdformats::readthedown:
+    highlight: haddock
+    number_sections: true
+---
+
+# Learning Objectives
+
+The work we do in this unit will build toward the following course-level learning objectives:
+
+  - LO 6: Describe scale of measurement and identify and compute appropriate summary statistics for each scale of measurement. 
+
+  - LO 10: Use Microsoft Excel to make the statistical computations described for statistical analysis.
+
+# Summary
+
+This unit will prepare ourselves for the rest of the course on applied statistical methods and get us comfortable using data in Microsoft Excel.
+  
+We will learn by doing in this unit, working with a data set using Microsoft Excel. The data set is a merge from two-bedroom housing rentals that have been advertised on Zillow and economic data from the U.S. census. We'll explore how average rental prices depend on urbanization and economic specialization. Along the way, we will develop our statistics terminology, to better understand and define what is a variable, what is a sample vs. a population, and even what is statistics. We will also learn how variables are measured, what types descriptive statistics are appropriate for different scales of measurement, and how to use Microsoft Excel to summarize data.
+
+# To-do list
+
+1. Download the data set, 'countyrent.xlsx' and open it in Microsoft Excel.
+
+2. Follow along with the tutorial, *Introduction to Data*. The tutorial includes text, screenshots from Microsoft Excel, and videos demonstrating how to perform tasks in Microsoft Excel. Replicate the steps in the tutorial with your own Excel document. The end of the tutorial includes self-check questions. Read through these and make sure you know how to answer the questions. These are included for your benefit to help you monitor your learning. You do not need to formally prepare your answers or hand anything in.
+
+3. Complete a short multiple-choice quiz as another self-check to monitor your learning.
+
+4. Participate in a group discussion. You and your group will have three related open-ended prompts. Your task is to come to a consensus in your group discussion area and then post your consensus responses to the class-wide discussion forum.
+
+5. Complete the homework assignment. Please post your questions to the 'Raise your hand' discussion forum and help out your classmates with any questions you see that you may be able to answer.
+
+# Group Discussion
+
+Imagine you work in a financial institution that provides personal banking services to individuals. You are tasked with using data to create a better understanding of how many services your customers use and what factors are related to using more services. Services include, but are not limited to, checking accounts, savings accounts, certificates of deposit accounts, auto loans, home loans, unsecured lines of credit, etc. Not only do additional services earn more money for the financial institution, it is expected that when customers add on additional services, they are more likely to maintain a relationship with the institution.
+
+Identify at least five variables that would be relevant for this analysis. Consider variables that are practical for a financial institution to have data on. Consider the following prompts for each variable.
+
+1. What is the likely scale of measurement for this variable?
+
+2. What descriptive statistics might you be able to compute for this variable? Do any statistics by combined with another variable (eg: means of a numeric variable computed for different categories of a categorical variable)?
+
+3. Could you make any implications for cause-and-effect between this variable and another. Why or why not? Answer the question in the context of the application, and go deeper than a broad statement like "correlation does not imply causation."
+
+Come to a consensus in your group discussion area and then post your consensus responses to the class-wide discussion forum.
